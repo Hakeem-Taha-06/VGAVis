@@ -19,6 +19,7 @@ project "VGAVis"
     {
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/src/**.c",
+        "%{prj.name}/obj_dir/**.cpp", -- verilator compiled files
         "%{prj.name}/include/**.h",
         "%{prj.name}/dependencies/src/**.cpp",
         "%{prj.name}/dependencies/src/**.c"
@@ -33,7 +34,7 @@ project "VGAVis"
         "%{wks.location}/%{prj.name}/dependencies/include/verilator/fstcpp",
         "%{prj.name}/src",
         "%{prj.name}/include",
-        "%{prj.name}/include/verilator"
+        "%{prj.name}/obj_dir" -- verilator compiled files
     }
 
     libdirs

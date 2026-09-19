@@ -36,7 +36,8 @@ module graphics_engine #(
 	wire [16:0] addr;
 
 	// by shifting the x and y values, every pixel is essentially doubled in size, to fit the whole 640*480 screen
-	assign addr = ({7'b0, pixel_y} >> 1)*IMAGE_WIDTH + ({7'b0, pixel_x} >> 1);
+	// we divide the image width by 2 because the framebuffer only holds 320*240 pixels
+	assign addr = ({7'b0, pixel_y} >> 1)*(IMAGE_WIDTH/2) + ({7'b0, pixel_x} >> 1);
 
 	always @(posedge clk)
 	begin

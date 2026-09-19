@@ -4,7 +4,6 @@
 #include <cstdint>
 
 class Vgraphics_engine;
-class Vgraphics_engine_graphics_engine;
 
 class Simulator
 {
@@ -23,13 +22,13 @@ public:
 	uint8_t getRgb() const;
 
 	inline const float* getScreen() const { return screen; }
+	const uint8_t* getFramebuffer() const;
 
 	void writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels);
 
 private:
 	// Verilated model; forward declared above, only included in Simulator.cpp
 	std::unique_ptr<Vgraphics_engine> m_top;
-	std::unique_ptr<Vgraphics_engine_graphics_engine> m_graphics_engine;
 
 	// 640 * 480 with 3 color channels
 	float screen[640 * 480 * 3];

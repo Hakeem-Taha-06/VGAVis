@@ -114,6 +114,7 @@ void Window::render(Simulator& sim) {
 
 	renderControlWindow(sim);
 	renderScreenWindow(sim);
+	renderFramebufferWindow(sim);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -172,19 +173,58 @@ void Window::renderControlWindow(Simulator& sim) {
 void Window::renderScreenWindow(Simulator& sim) {
 	ImGui::Begin("Screen");
 
-	if (screenTexture == 0)
-		glGenTextures(1, &screenTexture);
+	if (screen_texture == 0)
+		glGenTextures(1, &screen_texture);
 
-	glBindTexture(GL_TEXTURE_2D, screenTexture);
+	glBindTexture(GL_TEXTURE_2D, screen_texture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGB, GL_FLOAT, sim.getScreen());
 
-	ImTextureID imTexture = (ImTextureID)(intptr_t)screenTexture;
+	ImTextureID imTexture = (ImTextureID)(intptr_t)screen_texture;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imTexture, ImVec2((float)(640 * screenScale), (float)(480 * screenScale)));
+	ImGui::Image(imTexture, ImVec2((float)(640 * screen_scale), (float)(480 * screen_scale)));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	ImGui::End();
+}
+
+void Window::renderFramebufferWindow(Simulator& sim) {
+	ImGui::Begin("Framebuffer");
+	auto framebuffer = sim.getFramebuffer();
+
+	// Framebuffer is 320x240, 3-bit RGB per pixel (R=bit2, G=bit1, B=bit0).
+	// Allocate the conversion buffer on the heap (320*240*3 floats) and expand
+	// each 3-bit colour to float RGB for OpenGL.
+	auto framebuffer_screen = std::make_unique<float[]>(320 * 240 * 3);
+
+	for (int y = 0; y < 240; y++) {
+		for (int x = 0; x < 320; x++) {
+			uint8_t color = framebuffer[y * 320 + x];
+			int out_idx = (y * 320 + x) * 3;
+			framebuffer_screen[out_idx + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red
+			framebuffer_screen[out_idx + 1] = (color & 0b010) ? 1.0f : 0.0f; // Green
+			framebuffer_screen[out_idx + 2] = (color & 0b001) ? 1.0f : 0.0f; // Blue
+		}
+	}
+
+	if (framebuffer_texture == 0)
+		glGenTextures(1, &framebuffer_texture);
+
+	glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 320, 240, 0, GL_RGB, GL_FLOAT, framebuffer_screen.get());
+
+	ImTextureID imTexture = (ImTextureID)(intptr_t)framebuffer_texture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imTexture, ImVec2((float)(320 * screen_scale), (float)(240 * screen_scale)));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	glBindTexture(GL_TEXTURE_2D, 0);

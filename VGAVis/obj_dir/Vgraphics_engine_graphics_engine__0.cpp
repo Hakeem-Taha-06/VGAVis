@@ -9,7 +9,7 @@ void Vgraphics_engine_graphics_engine___ico_comb__TOP__graphics_engine__0(Vgraph
     Vgraphics_engine__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
-    vlSelfRef.__PVT__addr = (0x0001ffffU & (((IData)(0x00000280U) 
+    vlSelfRef.__PVT__addr = (0x0001ffffU & (((IData)(0x00000140U) 
                                              * (0x000001ffU 
                                                 & ((IData)(vlSymsp->TOP.pixel_y) 
                                                    >> 1U))) 

@@ -63,10 +63,12 @@ private:
 	void init();
 	void renderControlWindow(Simulator& sim);
 	void renderScreenWindow(Simulator& sim);
+	void renderFramebufferWindow(Simulator& sim);
 
 	std::string image_path;
-	unsigned int screenTexture = 0;
-	int screenScale = 1;
+	unsigned int screen_texture = 0;
+	unsigned int framebuffer_texture = 0;
+	int screen_scale = 1;
 
 	// Helpers
 	std::string readFile(std::string path);

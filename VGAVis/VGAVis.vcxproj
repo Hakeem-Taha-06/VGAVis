@@ -59,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;dependencies\include\verilator;dependencies\include\verilator\vltstd;dependencies\include\verilator\fstcpp;src;include;include\verilator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;dependencies\include\verilator;dependencies\include\verilator\vltstd;dependencies\include\verilator\fstcpp;src;include;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -81,7 +81,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;dependencies\include\verilator;dependencies\include\verilator\vltstd;dependencies\include\verilator\fstcpp;src;include;include\verilator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;dependencies\include\verilator;dependencies\include\verilator\vltstd;dependencies\include\verilator\fstcpp;src;include;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -110,12 +110,6 @@
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Simulator.h" />
     <ClInclude Include="include\Window.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine__Dpi.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine__Syms.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine___024root.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine__pch.h" />
-    <ClInclude Include="include\verilator\Vgraphics_engine_graphics_engine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad\glad.c" />
@@ -132,19 +126,19 @@
     <ClCompile Include="dependencies\src\verilator\verilated.cpp" />
     <ClCompile Include="dependencies\src\verilator\verilated_save.cpp" />
     <ClCompile Include="dependencies\src\verilator\verilated_threads.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine__Dpi.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine__Syms__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__Slow.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Simulator.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine__Dpi.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine__Syms__Slow.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__0.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__0__Slow.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__Slow.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__0.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__0__Slow.cpp" />
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__Slow.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

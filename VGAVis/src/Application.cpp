@@ -12,7 +12,7 @@ void Application::run() {
 
 	while (!window.shouldExit()) {
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 3000; i++) {
             // Emulate vga_sync outputs
             uint16_t final_x = (pixel_x < 640) ? pixel_x : 0;
             uint16_t final_y = (pixel_y < 480) ? pixel_y : 0;
@@ -22,12 +22,12 @@ void Application::run() {
 
             sim.Update();
 
-            if (pixel_x < 640) {
+            if (pixel_x < 799) {
                 pixel_x++;
             }
             else {
                 pixel_x = 0;
-                if (pixel_y < 480) {
+                if (pixel_y < 524) {
                     pixel_y++;
                 }
                 else {

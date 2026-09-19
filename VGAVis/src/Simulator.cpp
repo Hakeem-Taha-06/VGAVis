@@ -17,7 +17,6 @@ double sc_time_stamp() {
 Simulator::Simulator() {
 	// Instantiate the Verilated module
 	m_top = std::make_unique<Vgraphics_engine>();
-	m_graphics_engine = std::make_unique<Vgraphics_engine_graphics_engine>();
 
 	// Initialize inputs
 	m_top->clk = 0;
@@ -96,4 +95,8 @@ void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, in
 			m_top->graphics_engine->framebuffer[dest_index] = color_val;
 		}
 	}
+}
+
+const uint8_t* Simulator::getFramebuffer() const {
+	return &(m_top->graphics_engine->framebuffer[0]);
 }

@@ -22,14 +22,11 @@
     <Filter Include="include">
       <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\verilator">
-      <UniqueIdentifier>{7062B601-DC78-B497-25F0-3FB99145851F}</UniqueIdentifier>
+    <Filter Include="obj_dir">
+      <UniqueIdentifier>{7E778D50-EA56-0CEC-F36E-97C25FCD724D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\verilator">
-      <UniqueIdentifier>{143B625D-80FB-DD93-4936-2711B5B52270}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -47,24 +44,6 @@
     </ClInclude>
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine.h">
-      <Filter>include\verilator</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine__Dpi.h">
-      <Filter>include\verilator</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine__Syms.h">
-      <Filter>include\verilator</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine___024root.h">
-      <Filter>include\verilator</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine__pch.h">
-      <Filter>include\verilator</Filter>
-    </ClInclude>
-    <ClInclude Include="include\verilator\Vgraphics_engine_graphics_engine.h">
-      <Filter>include\verilator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +89,33 @@
     <ClCompile Include="dependencies\src\verilator\verilated_threads.cpp">
       <Filter>dependencies\src\verilator</Filter>
     </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine__Dpi.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine__Syms__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine___024root__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
     <ClCompile Include="src\Application.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -121,33 +127,6 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine__Dpi.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine__Syms__Slow.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__0.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__0__Slow.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine___024root__Slow.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__0.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__0__Slow.cpp">
-      <Filter>src\verilator</Filter>
-    </ClCompile>
-    <ClCompile Include="src\verilator\Vgraphics_engine_graphics_engine__Slow.cpp">
-      <Filter>src\verilator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
