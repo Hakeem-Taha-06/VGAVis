@@ -10,11 +10,15 @@
 
 #include "tinyfiledialogs.h"
 
+#include "stb/stb_image.h"
+
 #include "InputManager.h"
 #include "Shader.h"
 
 #include <iostream>
 #include <memory>
+#include <string>
+#include <fstream>
 
 class Simulator;
 
@@ -30,6 +34,7 @@ public:
 	void render(Simulator& sim);
 	void endFrame();
 
+	bool frame_ready = true;
 private:
 
 	const char* vshader_src = "#version 330 core\n"
@@ -57,6 +62,14 @@ private:
 
 	void init();
 	void renderControlWindow(Simulator& sim);
+	void renderScreenWindow(Simulator& sim);
+
+	std::string image_path;
+	unsigned int screenTexture = 0;
+	int screenScale = 1;
+
+	// Helpers
+	std::string readFile(std::string path);
 
 };
 

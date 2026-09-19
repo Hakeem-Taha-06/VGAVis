@@ -109,17 +109,14 @@ void Window::startFrame() {
 
 void Window::render(Simulator& sim) {
 	//rendering
-	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	// Create a dockspace that covers the entire viewport
+	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
-	shader->use();
-
-	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 9);
-	glBindVertexArray(0);
-	
+	renderControlWindow(sim);
+	renderScreenWindow(sim);
 
 	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Window::endFrame() {
@@ -138,12 +135,68 @@ void Window::endFrame() {
 
 void Window::renderControlWindow(Simulator& sim) {
 	ImGui::Begin("Control Window");
-
+	ImGui::PushItemWidth(200.0f);
+	ImGui::Text("Image File Path");
+	ImGui::InputText("##imagefilepath", &image_path); 
+	ImGui::PopItemWidth();
+	ImGui::SameLine();
 	if (ImGui::Button("Browse")) 
 	{
+		const char* filterPatters[1] = { "*.png" };
+		const char* path = tinyfd_openFileDialog(
+			"Choose .hex image file",
+			"",
+			1,
+			filterPatters,
+			".png",
+			0
+		);
+		if (path)
+			image_path = path;
+	}
+	
+	if (ImGui::Button("Load image into framebuffer")) {
+		int width, height, channels;
+		uint8_t* image_data = stbi_load(image_path.c_str(), &width, &height, &channels, 0);
 
+		if (image_data) {
+			sim.writeImageToFramebuffer(image_data, width, height, channels);
+			frame_ready = true;
+			stbi_image_free(image_data); // Free the RAM, the FPGA model now owns the data
+		}
 	}
 
+	ImGui::End();
+}
+
+void Window::renderScreenWindow(Simulator& sim) {
+	ImGui::Begin("Screen");
+
+	if (screenTexture == 0)
+		glGenTextures(1, &screenTexture);
+
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGB, GL_FLOAT, sim.getScreen());
+
+	ImTextureID imTexture = (ImTextureID)(intptr_t)screenTexture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imTexture, ImVec2((float)(640 * screenScale), (float)(480 * screenScale)));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	ImGui::End();
+}
+
+std::string Window::readFile(std::string path) {
+	std::ifstream file(path);
+
+	if (!file)
+		throw std::runtime_error("File not open");
+
+	return std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 }

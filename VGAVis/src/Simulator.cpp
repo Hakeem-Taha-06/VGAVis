@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Vgraphics_engine.h"
+#include "Vgraphics_engine_graphics_engine.h"
 #include "verilated.h"
 
 // MSVC has no weak symbols, so Verilator's optional legacy time callback must
@@ -16,6 +17,7 @@ double sc_time_stamp() {
 Simulator::Simulator() {
 	// Instantiate the Verilated module
 	m_top = std::make_unique<Vgraphics_engine>();
+	m_graphics_engine = std::make_unique<Vgraphics_engine_graphics_engine>();
 
 	// Initialize inputs
 	m_top->clk = 0;
@@ -43,14 +45,55 @@ void Simulator::Update() {
 
 	m_top->clk = 1;
 	m_top->eval();
+
+	// Capture rendered pixel during active video
+	if (m_top->video_on) {
+		int out_idx = (m_top->pixel_y * 640 + m_top->pixel_x) * 3;
+		// Expand 3-bit RGB (R=bit 2, G=bit 1, B=bit 0) to 8-bit channels
+		screen[out_idx + 0] = (m_top->rgb & 0b100) ? 1.0f : 0.0f; // Red
+		screen[out_idx + 1] = (m_top->rgb & 0b010) ? 1.0f : 0.0f; // Green
+		screen[out_idx + 2] = (m_top->rgb & 0b001) ? 1.0f : 0.0f; // Blue
+	}
 }
 
-void Simulator::setPixel(unsigned short x, unsigned short y, bool videoOn) {
+void Simulator::setPixel(uint16_t x, uint16_t y, bool video_on) {
 	m_top->pixel_x = x;
 	m_top->pixel_y = y;
-	m_top->video_on = videoOn ? 1 : 0;
+	m_top->video_on = video_on ? 1 : 0;
 }
 
-unsigned char Simulator::getRgb() const {
+uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
+}
+
+void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels) {
+	if (!image_data) return;
+
+	// Crop to the 320x240 limit (or smaller if the image is tiny)
+	int crop_width = std::min(width, 320);
+	int crop_height = std::min(height, 240);
+
+	for (int y = 0; y < crop_height; ++y) {
+		for (int x = 0; x < crop_width; ++x) {
+
+			// Calculate the starting byte index of the current pixel in your source image
+			int src_index = (y * width + x) * channels;
+
+			uint8_t r = image_data[src_index + 0];
+			uint8_t g = image_data[src_index + 1];
+			uint8_t b = image_data[src_index + 2];
+
+			// Quantize each channel: 1 if >= 128, else 0
+			uint8_t r_bit = (r >= 128) ? 1 : 0;
+			uint8_t g_bit = (g >= 128) ? 1 : 0;
+			uint8_t b_bit = (b >= 128) ? 1 : 0;
+
+			// Pack into 3-bit color (R=bit 2, G=bit 1, B=bit 0)
+			uint8_t color_val = (r_bit << 2) | (g_bit << 1) | b_bit;
+
+			// Write directly into the Verilated module's public memory array
+			int dest_index = y * 320 + x;
+			m_top->graphics_engine->framebuffer[dest_index] = color_val;
+		}
+	}
 }

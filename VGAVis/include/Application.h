@@ -14,5 +14,9 @@ public:
 private:
 	Simulator sim;
 	Window window;
+
+	int pixel_x = 0;
+	int pixel_y = 0;
+	bool video_on = 1;
 };
 

@@ -127,6 +127,7 @@
     <ClCompile Include="dependencies\src\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="dependencies\src\imgui\imgui_tables.cpp" />
     <ClCompile Include="dependencies\src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="dependencies\src\stb_image.cpp" />
     <ClCompile Include="dependencies\src\tinyfiledialogs\tinyfiledialogs.c" />
     <ClCompile Include="dependencies\src\verilator\verilated.cpp" />
     <ClCompile Include="dependencies\src\verilator\verilated_save.cpp" />
