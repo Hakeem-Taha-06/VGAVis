@@ -3,10 +3,10 @@
 //
 // Internal details; most user sources do not need this header,
 // unless using verilator public meta comments.
-// Suggest use Vgraphics_engine.h instead.
+// Suggest use Vvga_controller.h instead.
 
-#ifndef VERILATED_VGRAPHICS_ENGINE__PCH_H_
-#define VERILATED_VGRAPHICS_ENGINE__PCH_H_  // guard
+#ifndef VERILATED_VVGA_CONTROLLER__PCH_H_
+#define VERILATED_VVGA_CONTROLLER__PCH_H_  // guard
 
 // GCC and Clang only will precompile headers (PCH) for the first header.
 // So, make sure this is the one and only PCH.
@@ -20,8 +20,8 @@
 #include "verilated.h"
 #include "verilated_dpi.h"
 
-#include "Vgraphics_engine__Syms.h"
-#include "Vgraphics_engine.h"
+#include "Vvga_controller__Syms.h"
+#include "Vvga_controller.h"
 
 // Additional include files added using '--compiler-include'
 

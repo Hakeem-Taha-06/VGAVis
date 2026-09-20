@@ -2,9 +2,9 @@
 # DESCRIPTION: Verilator output: Makefile for building Verilated archive or executable
 #
 # Execute this makefile from the object directory:
-#    make -f Vgraphics_engine.mk
+#    make -f Vvga_controller.mk
 
-default: libVgraphics_engine
+default: libVvga_controller
 
 ### Constants...
 # Perl executable (from $PERL, defaults to 'perl' if not set)
@@ -32,9 +32,9 @@ VM_SC_TARGET_ARCH = mingw32
 
 ### Vars...
 # Design prefix (from --prefix)
-VM_PREFIX = Vgraphics_engine
+VM_PREFIX = Vvga_controller
 # Module prefix (from --prefix)
-VM_MODPREFIX = Vgraphics_engine
+VM_MODPREFIX = Vvga_controller
 # User CFLAGS (from -CFLAGS on Verilator command line)
 VM_USER_CFLAGS = \
 
@@ -50,12 +50,12 @@ VM_USER_DIR = \
 
 ### Default rules...
 # Include list of all generated classes
-include Vgraphics_engine_classes.mk
+include Vvga_controller_classes.mk
 # Include global rules
 include $(VERILATOR_ROOT)/include/verilated.mk
 
 ### Library rules (default lib mode)
-libVgraphics_engine.a: $(VK_OBJS) $(VK_USER_OBJS) $(VM_HIER_LIBS)
+libVvga_controller.a: $(VK_OBJS) $(VK_USER_OBJS) $(VM_HIER_LIBS)
 libverilated.a: $(VK_GLOBAL_OBJS)
-libVgraphics_engine: libVgraphics_engine.a libverilated.a $(VM_PREFIX)__ALL.a
+libVvga_controller: libVvga_controller.a libverilated.a $(VM_PREFIX)__ALL.a
 # Verilated -*- Makefile -*-

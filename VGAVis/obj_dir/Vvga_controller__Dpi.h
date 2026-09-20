@@ -5,8 +5,8 @@
 // Manually include this file where DPI .c import functions are declared to ensure
 // the C functions match the expectations of the DPI imports.
 
-#ifndef VERILATED_VGRAPHICS_ENGINE__DPI_H_
-#define VERILATED_VGRAPHICS_ENGINE__DPI_H_  // guard
+#ifndef VERILATED_VVGA_CONTROLLER__DPI_H_
+#define VERILATED_VVGA_CONTROLLER__DPI_H_  // guard
 
 #include "svdpi.h"
 

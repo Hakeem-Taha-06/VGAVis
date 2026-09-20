@@ -3,7 +3,8 @@
 #include <memory>
 #include <cstdint>
 
-class Vgraphics_engine;
+class Vvga_controller;
+class Vvga_controller_vga_controller;
 
 class Simulator
 {
@@ -15,8 +16,7 @@ public:
 	// Advances the Verilated model by one full clock cycle.
 	void Update();
 
-	// Drive the model inputs (scan coordinates + video enable)
-	void setPixel(uint16_t x, uint16_t y, bool videoOn);
+
 
 	// 3-bit RGB output of the model for the current pixel
 	uint8_t getRgb() const;
@@ -24,11 +24,11 @@ public:
 	inline const float* getScreen() const { return screen; }
 	const uint8_t* getFramebuffer() const;
 
-	void writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels);
+	void writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels, int limit);
 
 private:
 	// Verilated model; forward declared above, only included in Simulator.cpp
-	std::unique_ptr<Vgraphics_engine> m_top;
+	std::unique_ptr<Vvga_controller> m_top;
 
 	// 640 * 480 with 3 color channels
 	float screen[640 * 480 * 3];

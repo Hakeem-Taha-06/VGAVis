@@ -71,6 +71,7 @@ private:
 	unsigned int screen_texture = 0;
 	unsigned int framebuffer_texture = 0;
 	int screen_scale = 1;
+	int rgb_limit = 128;
 
 	// Helpers
 	std::string readFile(std::string path);

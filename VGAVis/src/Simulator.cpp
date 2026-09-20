@@ -3,8 +3,9 @@
 #include <iostream>
 #include <memory>
 
-#include "Vgraphics_engine.h"
-#include "Vgraphics_engine_graphics_engine.h"
+#include "Vvga_controller.h"
+#include "Vvga_controller_vga_controller.h"
+#include "Vvga_controller_graphics_engine.h"
 #include "verilated.h"
 
 // MSVC has no weak symbols, so Verilator's optional legacy time callback must
@@ -16,18 +17,16 @@ double sc_time_stamp() {
 
 Simulator::Simulator() {
 	// Instantiate the Verilated module
-	m_top = std::make_unique<Vgraphics_engine>();
+	m_top = std::make_unique<Vvga_controller>();
 
 	// Initialize inputs
 	m_top->clk = 0;
-	m_top->pixel_x = 0;
-	m_top->pixel_y = 0;
-	m_top->video_on = 1;
+	m_top->rst = 0;
 
 	// Settle the model once so outputs are valid before the first frame
 	m_top->eval();
 
-	std::cout << "SUCCESS: Verilated graphics_engine linked and evaluated cleanly!" << std::endl;
+	std::cout << "SUCCESS: Verilated vga_controller linked and evaluated cleanly!" << std::endl;
 	std::cout << "Initial RGB output: 0x" << std::hex << static_cast<int>(m_top->rgb) << std::dec << std::endl;
 }
 
@@ -46,8 +45,8 @@ void Simulator::Update() {
 	m_top->eval();
 
 	// Capture rendered pixel during active video
-	if (m_top->video_on) {
-		int out_idx = (m_top->pixel_y * 640 + m_top->pixel_x) * 3;
+	if (m_top->vga_controller->video_on) {
+		int out_idx = (m_top->vga_controller->pixel_y * 640 + m_top->vga_controller->pixel_x) * 3;
 		// Expand 3-bit RGB (R=bit 2, G=bit 1, B=bit 0) to 8-bit channels
 		screen[out_idx + 0] = (m_top->rgb & 0b100) ? 1.0f : 0.0f; // Red
 		screen[out_idx + 1] = (m_top->rgb & 0b010) ? 1.0f : 0.0f; // Green
@@ -55,17 +54,11 @@ void Simulator::Update() {
 	}
 }
 
-void Simulator::setPixel(uint16_t x, uint16_t y, bool video_on) {
-	m_top->pixel_x = x;
-	m_top->pixel_y = y;
-	m_top->video_on = video_on ? 1 : 0;
-}
-
 uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
 }
 
-void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels) {
+void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels, int limit) {
 	if (!image_data) return;
 
 	// Crop to the 320x240 limit (or smaller if the image is tiny)
@@ -83,20 +76,20 @@ void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, in
 			uint8_t b = image_data[src_index + 2];
 
 			// Quantize each channel: 1 if >= 128, else 0
-			uint8_t r_bit = (r >= 128) ? 1 : 0;
-			uint8_t g_bit = (g >= 128) ? 1 : 0;
-			uint8_t b_bit = (b >= 128) ? 1 : 0;
+			uint8_t r_bit = (r >= limit) ? 1 : 0;
+			uint8_t g_bit = (g >= limit) ? 1 : 0;
+			uint8_t b_bit = (b >= limit) ? 1 : 0;
 
 			// Pack into 3-bit color (R=bit 2, G=bit 1, B=bit 0)
 			uint8_t color_val = (r_bit << 2) | (g_bit << 1) | b_bit;
 
 			// Write directly into the Verilated module's public memory array
 			int dest_index = y * 320 + x;
-			m_top->graphics_engine->framebuffer[dest_index] = color_val;
+			m_top->vga_controller->gfx_inst->framebuffer[dest_index] = color_val;
 		}
 	}
 }
 
 const uint8_t* Simulator::getFramebuffer() const {
-	return &(m_top->graphics_engine->framebuffer[0]);
+	return &(m_top->vga_controller->gfx_inst->framebuffer[0]);
 }
