@@ -16,10 +16,10 @@ module vga_sync #(
 );
 
 
-// counters
+// counters, x,y
 reg [9:0] h_count = 0, v_count = 0;
 
-// halfing frequency clock
+// halfing frequency clock (لسه عايز أشوف الطريقة التانية)
 reg pixel_clk = 0;
 always @(posedge clk) begin
     if (rst) pixel_clk <= 0;
@@ -34,9 +34,7 @@ always @(posedge clk)
         v_count <= 0;
     end
 
-    else
-    
-    if (pixel_clk) begin
+    else if (pixel_clk) begin
 
         if (h_count==h_edge-1) begin 
             h_count <= 0;
