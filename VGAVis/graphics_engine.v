@@ -4,8 +4,9 @@ module graphics_engine #(
 )(
 	input wire [9:0] pixel_x,
 	input wire [9:0] pixel_y,
-	input wire  video_on,
-	input wire  clk,
+	input wire video_on,
+	input wire clk,
+	input wire rst,
 	output reg [2:0] rgb
 );
 	
@@ -17,20 +18,7 @@ module graphics_engine #(
 		$readmemh("initial_image.hex",framebuffer);
 	end
 
-	reg in_bounds;
-
-	always @(*)
-	begin
-
-		if( pixel_x < IMAGE_WIDTH && pixel_y < IMAGE_HEIGHT)
-		begin
-			in_bounds = 1'b1;
-		end 
-		else
-		begin
-			in_bounds = 1'b0;
-		end
-	end
+	wire in_bounds = (pixel_x < IMAGE_WIDTH) && (pixel_y < IMAGE_HEIGHT);
 
 	// enough bits for 320*240 addresses
 	wire [16:0] addr;
@@ -41,8 +29,11 @@ module graphics_engine #(
 
 	always @(posedge clk)
 	begin
-
-		if(video_on && in_bounds)
+		if (rst) 
+		begin
+			rgb <= 3'b0;
+		end
+		else if(video_on && in_bounds)
 		begin
 			rgb <= framebuffer[addr];
 		end

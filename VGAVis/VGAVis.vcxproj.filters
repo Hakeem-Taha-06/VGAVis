@@ -74,7 +74,7 @@
     <ClCompile Include="dependencies\src\imgui\imgui_widgets.cpp">
       <Filter>dependencies\src\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="dependencies\src\stb_image.cpp">
+    <ClCompile Include="dependencies\src\stb_impl.cpp">
       <Filter>dependencies\src</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\src\tinyfiledialogs\tinyfiledialogs.c">

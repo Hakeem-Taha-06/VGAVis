@@ -24,5 +24,5 @@ def generate_hex(input_path, output_path):
                 f.write(f"{color_val:X}\n")
 
 if __name__ == "__main__":
-    generate_hex("takanashi_rikka_wa.png", "image.hex")
+    generate_hex("L33-1.png", "image.hex")
     print("Successfully generated image.hex for 320x240 framebuffer.")

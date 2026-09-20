@@ -143,13 +143,13 @@ void Window::renderControlWindow(Simulator& sim) {
 	ImGui::SameLine();
 	if (ImGui::Button("Browse")) 
 	{
-		const char* filterPatters[1] = { "*.png" };
+		const char* filterPatters[] = {"*.png", "*.jpg", "*.jpeg"};
 		const char* path = tinyfd_openFileDialog(
-			"Choose .hex image file",
+			"Choose image file",
 			"",
-			1,
+			3,
 			filterPatters,
-			".png",
+			".png, .jpeg, .jpg",
 			0
 		);
 		if (path)
@@ -158,14 +158,37 @@ void Window::renderControlWindow(Simulator& sim) {
 	
 	if (ImGui::Button("Load image into framebuffer")) {
 		int width, height, channels;
-		uint8_t* image_data = stbi_load(image_path.c_str(), &width, &height, &channels, 0);
+		uint8_t* image_data = stbi_load(image_path.c_str(), &width, &height, &channels, 4);
 
-		if (image_data) {
-			sim.writeImageToFramebuffer(image_data, width, height, channels);
-			frame_ready = true;
-			stbi_image_free(image_data); // Free the RAM, the FPGA model now owns the data
+		if (!image_data) {
+			printf("stbi_load failed: %s\n", stbi_failure_reason());
+		}
+		else{
+			int out_w = 320, out_h = 240;
+			unsigned char* resized_image_data = (unsigned char*)malloc(out_w * out_h * 4);
+
+			if (!resized_image_data) {
+				std::cout << "malloc failed when resizing image data" << '\n';
+			}
+			else {
+
+				printf("Loaded image (%i, %i), channels = %i", width, height, channels);
+
+				stbir_resize_uint8_linear(
+					image_data, width, height, 0,            // src pixels, src w/h, src stride (0 = tightly packed)
+					resized_image_data, out_w, out_h, 0,     // dst pixels, dst w/h, dst stride (0 = tightly packed)
+					STBIR_RGBA
+				);
+
+				sim.writeImageToFramebuffer(resized_image_data, out_w, out_h, 4);
+				frame_ready = true;
+				stbi_image_free(image_data);
+				free(resized_image_data);
+			}
 		}
 	}
+
+	ImGui::InputInt("Simulation Speed", &sim_speed);
 
 	ImGui::End();
 }

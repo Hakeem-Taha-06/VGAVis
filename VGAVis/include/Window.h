@@ -11,6 +11,7 @@
 #include "tinyfiledialogs.h"
 
 #include "stb/stb_image.h"
+#include "stb/stb_image_resize2.h"
 
 #include "InputManager.h"
 #include "Shader.h"
@@ -35,6 +36,7 @@ public:
 	void endFrame();
 
 	bool frame_ready = true;
+	int sim_speed = 3000;
 private:
 
 	const char* vshader_src = "#version 330 core\n"
