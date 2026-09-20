@@ -2,7 +2,7 @@ module graphics_engine #(
 	parameter IMAGE_WIDTH = 640,
 	parameter IMAGE_HEIGHT = 480
 )(
-	input wire [9:0] pixelx,
+	input wire [9:0] pixel_x,
 	input wire [9:0] pixel_y,
 	input wire video_on,
 	input wire clk,

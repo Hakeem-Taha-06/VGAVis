@@ -89,31 +89,40 @@
     <ClCompile Include="dependencies\src\verilator\verilated_threads.cpp">
       <Filter>dependencies\src\verilator</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine__Dpi.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller__Dpi.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine__Syms__Slow.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller__Syms__Slow.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller___024root__0.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine___024root__0__Slow.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller___024root__0__Slow.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine___024root__Slow.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller___024root__Slow.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller_graphics_engine__0.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__0__Slow.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller_graphics_engine__0__Slow.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
-    <ClCompile Include="obj_dir\Vgraphics_engine_graphics_engine__Slow.cpp">
+    <ClCompile Include="obj_dir\Vvga_controller_graphics_engine__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vvga_controller_vga_controller__0.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vvga_controller_vga_controller__0__Slow.cpp">
+      <Filter>obj_dir</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vvga_controller_vga_controller__Slow.cpp">
       <Filter>obj_dir</Filter>
     </ClCompile>
     <ClCompile Include="src\Application.cpp">

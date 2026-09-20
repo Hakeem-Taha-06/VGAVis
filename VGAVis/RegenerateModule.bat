@@ -15,10 +15,10 @@ if not exist "%MSYS2_PATH%\usr\bin\bash.exe" (
 set "MSYSTEM=MINGW64"
 set "CHERE_INVOKING=1"
 
-echo Running Verilator on graphics_engine.v...
+echo Running Verilator on vga_controller.v...
 
 :: -l loads environment/paths; -c runs the commands inside bash
-"%MSYS2_PATH%\usr\bin\bash.exe" -lc "verilator -Wall --cc graphics_engine.v"
+"%MSYS2_PATH%\usr\bin\bash.exe" -lc "verilator -Wall --cc vga_controller.v"
 
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] Verilation finished cleanly! obj_dir updated.

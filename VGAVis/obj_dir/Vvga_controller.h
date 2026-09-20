@@ -5,23 +5,23 @@
 // The class here is then constructed to instantiate the design.
 // See the Verilator manual for examples.
 
-#ifndef VERILATED_VGRAPHICS_ENGINE_H_
-#define VERILATED_VGRAPHICS_ENGINE_H_  // guard
+#ifndef VERILATED_VVGA_CONTROLLER_H_
+#define VERILATED_VVGA_CONTROLLER_H_  // guard
 
 #include "verilated.h"
 #include "svdpi.h"
 
-class Vgraphics_engine__Syms;
-class Vgraphics_engine___024root;
-class Vgraphics_engine_graphics_engine;
+class Vvga_controller__Syms;
+class Vvga_controller___024root;
+class Vvga_controller_vga_controller;
 
 
 // This class is the main interface to the Verilated model
-class alignas(VL_CACHE_LINE_BYTES) Vgraphics_engine VL_NOT_FINAL : public VerilatedModel {
-    friend class Vgraphics_engine__Syms;
+class alignas(VL_CACHE_LINE_BYTES) Vvga_controller VL_NOT_FINAL : public VerilatedModel {
+    friend class Vvga_controller__Syms;
   private:
     // Symbol table holding complete model state (owned by this class)
-    Vgraphics_engine__Syms* const vlSymsp;
+    Vvga_controller__Syms* const vlSymsp;
     // Evaluation loop
     VerilatedEvalLoop m_evalLoop;
 
@@ -35,31 +35,31 @@ class alignas(VL_CACHE_LINE_BYTES) Vgraphics_engine VL_NOT_FINAL : public Verila
     // The application code writes and reads these signals to
     // propagate new values into/out from the Verilated model.
     VL_IN8(&clk,0,0);
-    VL_IN8(&video_on,0,0);
+    VL_IN8(&rst,0,0);
+    VL_OUT8(&vsync,0,0);
+    VL_OUT8(&hsync,0,0);
     VL_OUT8(&rgb,2,0);
-    VL_IN16(&pixel_x,9,0);
-    VL_IN16(&pixel_y,9,0);
 
     // CELLS
     // Public to allow access to /* verilator public */ items.
     // Otherwise the application code can consider these internals.
-    Vgraphics_engine_graphics_engine* const graphics_engine;
+    Vvga_controller_vga_controller* const vga_controller;
 
     // Root instance pointer to allow access to model internals,
     // including inlined /* verilator public_flat_* */ items.
-    Vgraphics_engine___024root* const rootp;
+    Vvga_controller___024root* const rootp;
 
     // CONSTRUCTORS
     /// Construct the model; called by application code
     /// If contextp is null, then the model will use the default global context
     /// If name is "", then makes a wrapper with a
     /// single model invisible with respect to DPI scope names.
-    explicit Vgraphics_engine(VerilatedContext* contextp, const char* name = "TOP");
-    explicit Vgraphics_engine(const char* name = "TOP");
+    explicit Vvga_controller(VerilatedContext* contextp, const char* name = "TOP");
+    explicit Vvga_controller(const char* name = "TOP");
     /// Destroy the model; called (often implicitly) by application code
-    virtual ~Vgraphics_engine();
+    virtual ~Vvga_controller();
   private:
-    VL_UNCOPYABLE(Vgraphics_engine);  ///< Copying not allowed
+    VL_UNCOPYABLE(Vvga_controller);  ///< Copying not allowed
 
   public:
     // API METHODS

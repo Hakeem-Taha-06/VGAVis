@@ -6,9 +6,9 @@ module vga_controller(
 	output wire [2:0] rgb
 );
 
-	wire video_on;
-	wire [9:0] pixel_x;
-	wire [9:0] pixel_y;
+	wire video_on /*verilator public*/;
+	wire [9:0] pixel_x /*verilator public*/;
+	wire [9:0] pixel_y /*verilator public*/;
 	vga_sync sync_inst(
 		.clk(clk),
 		.rst(rst),
