@@ -172,7 +172,7 @@ void Window::renderControlWindow(Simulator& sim) {
 			}
 			else {
 
-				printf("Loaded image (%i, %i), channels = %i", width, height, channels);
+				printf("Loaded image (%i, %i), channels = %i\n", width, height, channels);
 
 				stbir_resize_uint8_linear(
 					image_data, width, height, 0,            // src pixels, src w/h, src stride (0 = tightly packed)
@@ -180,7 +180,7 @@ void Window::renderControlWindow(Simulator& sim) {
 					STBIR_RGBA
 				);
 
-				sim.writeImageToFramebuffer(resized_image_data, out_w, out_h, 4);
+				sim.writeImageToFramebuffer(resized_image_data, out_w, out_h, 4, rgb_limit);
 				frame_ready = true;
 				stbi_image_free(image_data);
 				free(resized_image_data);
@@ -189,6 +189,7 @@ void Window::renderControlWindow(Simulator& sim) {
 	}
 
 	ImGui::InputInt("Simulation Speed", &sim_speed);
+	ImGui::InputInt("rgb limit", &rgb_limit);
 
 	ImGui::End();
 }

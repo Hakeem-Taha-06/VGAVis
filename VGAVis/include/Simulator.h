@@ -24,7 +24,7 @@ public:
 	inline const float* getScreen() const { return screen; }
 	const uint8_t* getFramebuffer() const;
 
-	void writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels);
+	void writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels, int limit);
 
 private:
 	// Verilated model; forward declared above, only included in Simulator.cpp

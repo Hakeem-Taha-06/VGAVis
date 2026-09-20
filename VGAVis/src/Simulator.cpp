@@ -65,7 +65,7 @@ uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
 }
 
-void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels) {
+void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels, int limit) {
 	if (!image_data) return;
 
 	// Crop to the 320x240 limit (or smaller if the image is tiny)
@@ -83,9 +83,9 @@ void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, in
 			uint8_t b = image_data[src_index + 2];
 
 			// Quantize each channel: 1 if >= 128, else 0
-			uint8_t r_bit = (r >= 128) ? 1 : 0;
-			uint8_t g_bit = (g >= 128) ? 1 : 0;
-			uint8_t b_bit = (b >= 128) ? 1 : 0;
+			uint8_t r_bit = (r >= limit) ? 1 : 0;
+			uint8_t g_bit = (g >= limit) ? 1 : 0;
+			uint8_t b_bit = (b >= limit) ? 1 : 0;
 
 			// Pack into 3-bit color (R=bit 2, G=bit 1, B=bit 0)
 			uint8_t color_val = (r_bit << 2) | (g_bit << 1) | b_bit;
