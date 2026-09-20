@@ -16,11 +16,14 @@ double sc_time_stamp() {
 }
 
 Simulator::Simulator() {
+	// Instantiate the Verilated module
 	m_top = std::make_unique<Vvga_controller>();
 
+	// Initialize inputs
 	m_top->clk = 0;
 	m_top->rst = 0;
 
+	// Settle the model once so outputs are valid before the first frame
 	m_top->eval();
 
 	std::cout << "SUCCESS: Verilated vga_controller linked and evaluated cleanly!" << std::endl;
@@ -34,21 +37,22 @@ Simulator::~Simulator() {
 }
 
 void Simulator::Update() {
+	// Run one clock cycle: Low -> High
 	m_top->clk = 0;
 	m_top->eval();
 
 	m_top->clk = 1;
 	m_top->eval();
 
+	// Capture rendered pixel during active video
 	if (m_top->vga_controller->video_on) {
 		int out_idx = (m_top->vga_controller->pixel_y * 640 + m_top->vga_controller->pixel_x) * 3;
-		screen[out_idx + 0] = (m_top->rgb & 0b100) ? 1.0f : 0.0f;
-		screen[out_idx + 1] = (m_top->rgb & 0b010) ? 1.0f : 0.0f;
-		screen[out_idx + 2] = (m_top->rgb & 0b001) ? 1.0f : 0.0f;
+		// Expand 3-bit RGB (R=bit 2, G=bit 1, B=bit 0) to 8-bit channels
+		screen[out_idx + 0] = (m_top->rgb & 0b100) ? 1.0f : 0.0f; // Red
+		screen[out_idx + 1] = (m_top->rgb & 0b010) ? 1.0f : 0.0f; // Green
+		screen[out_idx + 2] = (m_top->rgb & 0b001) ? 1.0f : 0.0f; // Blue
 	}
 }
-
-
 
 uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
