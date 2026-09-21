@@ -1,0 +1,100 @@
+`timescale 1ns / 1ps
+
+module test;
+
+    // inputs
+    reg clk;
+    reg rst;
+    
+    // outputs
+    wire vsync;
+    wire hsync;
+    wire [2:0] rgb;
+
+    // Instantiate the VGA controller
+    vga_controller uut (
+        .clk(clk),
+        .rst(rst),
+        .vsync(vsync),
+        .hsync(hsync),
+        .rgb(rgb)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk;
+    end
+
+    integer fd;
+    integer pixel_count = 0;
+
+    // تأخير إشارة video_on بمقدار دورة واحدة لتتزامن مع تأخير خروج الألوان (rgb) من الذاكرة
+    reg video_on_d = 0;
+    always @(posedge clk) begin
+        // نستخدم المسار الهرمي للوصول إلى الإشارة الداخلية
+        video_on_d <= uut.sync_inst.video_on;
+    end
+
+    // تحويل الألوان من 3-bit إلى 24-bit (للتوافق مع صيغة الصور القياسية)
+    // بافتراض أن [2]=Red, [1]=Green, [0]=Blue
+    wire [7:0] r = rgb[2] ? 8'd255 : 8'd0;
+    wire [7:0] g = rgb[1] ? 8'd255 : 8'd0;
+    wire [7:0] b = rgb[0] ? 8'd255 : 8'd0;
+
+    initial begin
+        // فتح ملف الصورة للكتابة
+        fd = $fopen("vga_output.ppm", "w");
+        if (fd == 0) begin
+            $display("Error: Could not open output file.");
+            $finish;
+        end
+        
+        // كتابة ترويسة ملف الـ PPM
+        // P3: تنسيق نصي RGB
+        // 640 480: أبعاد الشاشة
+        // 255: أقصى قيمة للون
+        $fwrite(fd, "P3\n640 480\n255\n");
+
+        // تهيئة النظام (Reset)
+        rst = 1;
+        #100;
+        rst = 0;
+
+        $display("Simulation started. Rendering frame...");
+
+        // الانتظار حتى يتم رسم إطار كامل (640 × 480 = 307200 بكسل)
+        wait(pixel_count == 307200);
+        
+        $display("Frame completely rendered. Closing file.");
+        $fclose(fd);
+        $finish;
+    end
+
+    // كتابة بيانات البكسل في الملف
+    // سلك داخلي لمراقبة نبضة الـ 25 ميجاهرتز
+    wire p_clk = uut.sync_inst.pixel_clk;
+
+    // كتابة بيانات البكسل في الملف
+    always @(posedge clk) begin
+        // نكتب في الملف فقط عندما نكون داخل منطقة العرض، وعندما تكون نبضة البكسل نشطة (مرة كل دورتين)
+        if (video_on_d && !rst && p_clk) begin
+            $fwrite(fd, "%0d %0d %0d\n", r, g, b);
+            pixel_count = pixel_count + 1;
+            
+            // سطر اختياري لطباعة نسبة التقدم في الشاشة حتى لا تظن أن البرنامج معلق
+            if (pixel_count % 30720 == 0) begin
+                $display("Rendering Progress: %0d%%", (pixel_count / 3072));
+            end
+        end
+    end
+    
+    // حماية ضد الدورات اللانهائية (Timeout)
+    initial begin
+        #30_000_000; // 30 ملي ثانية كافية جداً لرسم إطار كامل بتردد 60 هرتز
+        $display("Timeout reached! Something is wrong with the timing.");
+        $fclose(fd);
+        $finish;
+    end
+
+endmodule
