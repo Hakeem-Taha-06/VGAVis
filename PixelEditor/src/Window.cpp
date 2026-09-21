@@ -144,8 +144,6 @@ void Window::renderFileWindow(PixelData& data) {
 		}
 	}
 
-	ImGui::SameLine();
-
 	if (ImGui::Button("Import Hex")) {
 		const char* dir = tinyfd_selectFolderDialog("Select import directory", "");
 		if (dir) {
