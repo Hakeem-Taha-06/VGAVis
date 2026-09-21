@@ -63,3 +63,55 @@ project "VGAVis"
         defines "RELEASE"
         symbols "off"
         optimize "on"
+
+project "PixelEditor"
+    location "PixelEditor"
+    language "C++"
+    kind "ConsoleApp"
+
+    targetdir ("bin/"..outputdir.."/%{prj.name}")
+    objdir ("bin-int/"..outputdir.."/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/src/**.cpp",
+        "%{prj.name}/src/**.c",
+        "%{prj.name}/include/**.h",
+        "%{prj.name}/dependencies/src/**.cpp",
+        "%{prj.name}/dependencies/src/**.c"
+    }
+
+    includedirs
+    {
+        "%{wks.location}/%{prj.name}/dependencies/include",
+        "%{wks.location}/%{prj.name}/dependencies/include/imgui",
+        "%{prj.name}/src",
+        "%{prj.name}/include"
+    }
+
+    libdirs
+    {
+        "%{wks.location}/%{prj.name}/dependencies/libs"
+    }
+
+    links 
+    {
+        "glfw3",
+        "opengl32"
+    }
+
+    cppdialect "C++17"
+    staticruntime "Off"
+    systemversion "latest"
+
+    filter "system:windows"
+        linkoptions { "/ignore:4099" }
+
+    filter "configurations:Debug"
+        defines "DEBUG"
+        symbols "on"
+
+    filter "configurations:Release"
+        defines "RELEASE"
+        symbols "off"
+        optimize "on"
