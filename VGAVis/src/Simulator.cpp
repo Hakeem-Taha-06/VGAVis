@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <memory>
+#include <algorithm>
+#include <vector>
 
 #include "Vvga_controller.h"
 #include "Vvga_controller_vga_controller.h"
@@ -28,6 +30,9 @@ Simulator::Simulator() {
 
 	std::cout << "SUCCESS: Verilated vga_controller linked and evaluated cleanly!" << std::endl;
 	std::cout << "Initial RGB output: 0x" << std::hex << static_cast<int>(m_top->rgb) << std::dec << std::endl;
+
+	// Default palette: identity 3-bit RGB (palette[i] = i)
+	for (int i = 0; i < 8; ++i) palette[i] = (uint8_t)i;
 }
 
 Simulator::~Simulator() {
@@ -58,34 +63,63 @@ uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
 }
 
-void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels, int limit) {
+void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, int height, int channels) {
 	if (!image_data) return;
 
-	// Crop to the 320x240 limit (or smaller if the image is tiny)
-	int crop_width = std::min(width, 320);
-	int crop_height = std::min(height, 240);
+	int w = std::min(width, 320);
+	int h = std::min(height, 240);
 
-	for (int y = 0; y < crop_height; ++y) {
-		for (int x = 0; x < crop_width; ++x) {
+	// Working float buffer for error diffusion
+	std::vector<float> buf((size_t)w * h * 3);
 
-			// Calculate the starting byte index of the current pixel in your source image
-			int src_index = (y * width + x) * channels;
+	// Copy source to float [0,1]
+	for (int y = 0; y < h; ++y) {
+		for (int x = 0; x < w; ++x) {
+			int si = (y * width + x) * channels;
+			int di = (y * w + x) * 3;
+			buf[di + 0] = image_data[si + 0] / 255.0f;
+			buf[di + 1] = image_data[si + 1] / 255.0f;
+			buf[di + 2] = image_data[si + 2] / 255.0f;
+		}
+	}
 
-			uint8_t r = image_data[src_index + 0];
-			uint8_t g = image_data[src_index + 1];
-			uint8_t b = image_data[src_index + 2];
+	// Floyd-Steinberg error diffusion against palette[0..3] (4 colours, 2 bpp)
+	for (int y = 0; y < h; ++y) {
+		for (int x = 0; x < w; ++x) {
+			int i = (y * w + x) * 3;
+			float r = buf[i + 0], g = buf[i + 1], b = buf[i + 2];
 
-			// Quantize each channel: 1 if >= 128, else 0
-			uint8_t r_bit = (r >= limit) ? 1 : 0;
-			uint8_t g_bit = (g >= limit) ? 1 : 0;
-			uint8_t b_bit = (b >= limit) ? 1 : 0;
+			// Nearest palette colour
+			int best = 0;
+			float bestDist = 1e30f;
+			for (int c = 0; c < 4; ++c) {
+				float pr = (palette[c] & 0b100) ? 1.0f : 0.0f;
+				float pg = (palette[c] & 0b010) ? 1.0f : 0.0f;
+				float pb = (palette[c] & 0b001) ? 1.0f : 0.0f;
+				float dr = r - pr, dg = g - pg, db = b - pb;
+				float d = dr * dr + dg * dg + db * db;
+				if (d < bestDist) { bestDist = d; best = c; }
+			}
 
-			// Pack into 3-bit color (R=bit 2, G=bit 1, B=bit 0)
-			uint8_t color_val = (r_bit << 2) | (g_bit << 1) | b_bit;
+			float pr = (palette[best] & 0b100) ? 1.0f : 0.0f;
+			float pg = (palette[best] & 0b010) ? 1.0f : 0.0f;
+			float pb = (palette[best] & 0b001) ? 1.0f : 0.0f;
+			float er = r - pr, eg = g - pg, eb = b - pb;
 
-			// Write directly into the Verilated module's public memory array
-			int dest_index = y * 320 + x;
-			m_top->vga_controller->gfx_inst->framebuffer[dest_index] = color_val;
+			// Store 2-bit colour index into the indexed framebuffer
+			m_top->vga_controller->gfx_inst->framebuffer[y * 320 + x] = (uint8_t)best;
+
+			auto diffuse = [&](int nx, int ny, float wgt) {
+				if (nx < 0 || nx >= w || ny < 0 || ny >= h) return;
+				int ni = (ny * w + nx) * 3;
+				buf[ni + 0] += er * wgt;
+				buf[ni + 1] += eg * wgt;
+				buf[ni + 2] += eb * wgt;
+			};
+			diffuse(x + 1, y,     7.0f / 16.0f);
+			diffuse(x - 1, y + 1, 3.0f / 16.0f);
+			diffuse(x,     y + 1, 5.0f / 16.0f);
+			diffuse(x + 1, y + 1, 1.0f / 16.0f);
 		}
 	}
 }

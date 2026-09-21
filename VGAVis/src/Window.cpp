@@ -115,6 +115,11 @@ void Window::render(Simulator& sim) {
 	renderControlWindow(sim);
 	renderScreenWindow(sim);
 	renderFramebufferWindow(sim);
+	renderNametableWindow(sim);
+	renderPatternTableWindow(sim);
+	renderPatternPixelsWindow(sim);
+	renderPatternTextureWindow(sim);
+	renderNametableGridWindow(sim);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -180,7 +185,7 @@ void Window::renderControlWindow(Simulator& sim) {
 					STBIR_RGBA
 				);
 
-				sim.writeImageToFramebuffer(resized_image_data, out_w, out_h, 4, rgb_limit);
+				sim.writeImageToFramebuffer(resized_image_data, out_w, out_h, 4);
 				frame_ready = true;
 				stbi_image_free(image_data);
 				free(resized_image_data);
@@ -189,7 +194,9 @@ void Window::renderControlWindow(Simulator& sim) {
 	}
 
 	ImGui::InputInt("Simulation Speed", &sim_speed);
-	ImGui::InputInt("rgb limit", &rgb_limit);
+
+	const char* modes[] = { "Image", "Tilemap" };
+	ImGui::Combo("Render Mode", &render_mode, modes, 2);
 
 	ImGui::End();
 }
@@ -252,6 +259,236 @@ void Window::renderFramebufferWindow(Simulator& sim) {
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	ImGui::End();
+}
+
+void Window::renderMemoryTable(const char* title, const char* table_id, uint16_t* data, int count, MemoryViewState& view) {
+	ImGui::Begin(title);
+
+	int numCols = 16;
+	int numRows = count / numCols;
+	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
+
+	// Memory address search
+	bool wantSearch = false;
+	ImGui::Text("Search Address");
+	ImGui::InputScalar("##address", ImGuiDataType_U16, &view.search_address, nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+	ImGui::SameLine();
+	if (ImGui::Button("GOTO") && !wantSearch) {
+		wantSearch = true;
+		int searchRow = view.search_address / numCols;
+		ImGuiStyle& style = ImGui::GetStyle();
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f;
+		view.target_scroll = searchRow * rowHeight;
+	}
+
+	if (ImGui::BeginTable(table_id, numCols + 1, flags)) {
+
+		// set fixed width for columns
+		ImGui::TableSetupColumn("Offset", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		for (int i = 0; i < numCols; i++) {
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 48.0f);
+		}
+
+		if (wantSearch) {
+			ImGui::SetScrollY(view.target_scroll);
+			wantSearch = false;
+		}
+
+		ImGuiListClipper clipper;
+		clipper.Begin(numRows);
+
+		while (clipper.Step()) {
+			for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
+				ImGui::TableNextRow();
+
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%04X", row * numCols);
+
+				for (int col = 0; col < numCols; ++col) {
+					ImGui::TableSetColumnIndex(col + 1);
+
+					int byteIdx = row * numCols + col;
+					ImGui::PushID(byteIdx);
+					ImGui::PushItemWidth(-FLT_MIN);
+
+					ImGui::InputScalar("##cell", ImGuiDataType_U16, &data[byteIdx], nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+
+					ImGui::PopItemWidth();
+					ImGui::PopID();
+				}
+			}
+		}
+
+		ImGui::EndTable();
+	}
+	ImGui::End();
+}
+
+void Window::renderNametableWindow(Simulator& sim) {
+	renderMemoryTable("Nametable", "nametable_tbl", sim.getNametable(), 40 * 30, nametable_view);
+}
+
+void Window::renderPatternTableWindow(Simulator& sim) {
+	ImGui::Begin("Pattern Table");
+	uint16_t* patterns = sim.getPatternTable();
+
+	const int numCols = 8;         // 8 tiles side by side
+	const int rowsPerTile = 8;     // 8 scanlines per tile
+	const int numMajorRows = 1200 / numCols; // 150 groups of 8 tiles
+
+	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg;
+
+	ImGuiListClipper clipper;
+	clipper.Begin(numMajorRows);
+	while (clipper.Step()) {
+		for (int major = clipper.DisplayStart; major < clipper.DisplayEnd; ++major) {
+			int baseTile = major * numCols;
+
+			ImGui::Text("Tiles %04d - %04d", baseTile, baseTile + numCols - 1);
+
+			if (ImGui::BeginTable("pt_rows", numCols + 1, flags)) {
+				ImGui::TableSetupColumn("Row", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+				for (int c = 0; c < numCols; c++) {
+					ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 52.0f);
+				}
+
+				for (int row = 0; row < rowsPerTile; ++row) {
+					ImGui::TableNextRow();
+
+					ImGui::TableSetColumnIndex(0);
+					ImGui::Text("%d", row);
+
+					for (int c = 0; c < numCols; ++c) {
+						ImGui::TableSetColumnIndex(c + 1);
+
+						int idx = (baseTile + c) * rowsPerTile + row;
+						ImGui::PushID(idx);
+						ImGui::PushItemWidth(-FLT_MIN);
+						ImGui::InputScalar("##cell", ImGuiDataType_U16, &patterns[idx], nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+						ImGui::PopItemWidth();
+						ImGui::PopID();
+					}
+				}
+				ImGui::EndTable();
+			}
+
+			ImGui::Separator();
+		}
+	}
+
+	ImGui::End();
+}
+
+void Window::renderPatternPixelsWindow(Simulator& sim) {
+	ImGui::Begin("Pattern Pixels");
+	uint16_t* patterns = sim.getPatternTable();
+
+	ImGui::PushItemWidth(120.0f);
+	ImGui::InputInt("Tile Index", &pattern_tile_index);
+	ImGui::PopItemWidth();
+	if (pattern_tile_index < 0) pattern_tile_index = 0;
+	if (pattern_tile_index > 1199) pattern_tile_index = 1199;
+
+	ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit;
+	if (ImGui::BeginTable("pixgrid", 8, flags)) {
+		for (int py = 0; py < 8; ++py) {
+			ImGui::TableNextRow();
+
+			uint16_t word = patterns[pattern_tile_index * 8 + py];
+			for (int px = 0; px < 8; ++px) {
+				ImGui::TableSetColumnIndex(px);
+
+				int shift = px * 2;
+				int val = (word >> shift) & 0x3;
+				ImGui::PushID(py * 8 + px);
+				ImGui::PushItemWidth(30);
+
+				int tmp = val;
+				if (ImGui::InputInt("##px", &tmp, 1, 1)) {
+					if (tmp < 0) tmp = 0;
+					if (tmp > 3) tmp = 3;
+					word = (word & ~(0x3 << shift)) | ((uint16_t)tmp << shift);
+					patterns[pattern_tile_index * 8 + py] = word;
+				}
+
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+			}
+		}
+		ImGui::EndTable();
+	}
+
+	ImGui::End();
+}
+
+void Window::renderPatternTextureWindow(Simulator& sim) {
+	ImGui::Begin("Pattern Texture");
+
+	if (render_mode == 0) {
+		// Image mode: pattern table unused, show nothing but keep texture contents
+		ImGui::End();
+		return;
+	}
+
+	if (pattern_texture == 0)
+		glGenTextures(1, &pattern_texture);
+
+	uint16_t* patterns = sim.getPatternTable();
+	const uint8_t* palette = sim.getPalette();
+
+	// 1200 tiles in a 40x30 grid, each 8x8 px -> 320x240 texture
+	auto tex = std::make_unique<float[]>(320 * 240 * 3);
+
+	for (int ty = 0; ty < 30; ++ty) {
+		for (int tx = 0; tx < 40; ++tx) {
+			int tile = ty * 40 + tx;
+			for (int py = 0; py < 8; ++py) {
+				uint16_t word = patterns[tile * 8 + py];
+				for (int px = 0; px < 8; ++px) {
+					int idx = (word >> (px * 2)) & 0x3;
+					uint8_t color = palette[idx];
+					int oi = ((ty * 8 + py) * 320 + (tx * 8 + px)) * 3;
+					tex[oi + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red
+					tex[oi + 1] = (color & 0b010) ? 1.0f : 0.0f; // Green
+					tex[oi + 2] = (color & 0b001) ? 1.0f : 0.0f; // Blue
+				}
+			}
+		}
+	}
+
+	glBindTexture(GL_TEXTURE_2D, pattern_texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 320, 240, 0, GL_RGB, GL_FLOAT, tex.get());
+
+	ImTextureID imTexture = (ImTextureID)(intptr_t)pattern_texture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imTexture, ImVec2((float)(320 * screen_scale), (float)(240 * screen_scale)));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	ImGui::End();
+}
+
+void Window::renderNametableGridWindow(Simulator& sim) {
+	ImGui::Begin("Nametable Grid");
+	uint16_t* nt = sim.getNametable();
+
+	if (ImGui::BeginTable("ntgrid", 40, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
+		for (int y = 0; y < 30; ++y) {
+			ImGui::TableNextRow();
+			for (int x = 0; x < 40; ++x) {
+				ImGui::TableSetColumnIndex(x);
+				ImGui::Text("%03X", nt[y * 40 + x]);
+			}
+		}
+		ImGui::EndTable();
+	}
 
 	ImGui::End();
 }
