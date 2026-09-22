@@ -1,6 +1,8 @@
 # VGAVis
 
-VGAVis is a real-time VGA controller visualizer for Windows. It takes a Verilog VGA controller design, compiles it into C++ using Verilator, and simulates it cycle-by-cycle while rendering the 640x480 output to a window using OpenGL and Dear ImGui. The framebuffer contents can be inspected directly, and images can be loaded into the simulated framebuffer at runtime through a file browser.
+VGAVis is a real-time VGA controller visualizer for Windows. It takes a Verilog VGA controller design, compiles it into C++ using Verilator, and simulates it cycle-by-cycle while rendering the 640x480 output to a window using OpenGL and Dear ImGui. It supports both a direct Image rendering mode and a Sprite-based Tilemap rendering mode. The simulated memory (framebuffer, nametable, pattern table, and palette) can be directly inspected and edited in real-time, and tile data can be loaded through the UI.
+
+https://github.com/user-attachments/assets/1fc5c8d0-54b9-4369-84d6-9fe91fd3eb21
 
 The project is intended for debugging and visualizing FPGA-based VGA controller designs without needing physical hardware.
 
@@ -79,6 +81,7 @@ The top-level module must be named `vga_controller`. Its port interface must be 
 module vga_controller(
     input wire clk,
     input wire rst,
+    input wire mode_select,
     output wire vsync,
     output wire hsync,
     output wire [2:0] rgb
@@ -95,13 +98,16 @@ wire [9:0] pixel_y /*verilator public*/;
 
 ### Sub-Module: `graphics_engine`
 
-The top module must instantiate a `graphics_engine` module with the instance name `gfx_inst`. The graphics engine must contain a `framebuffer` array marked with `/*verilator public*/` so the simulator can read from and write to it at runtime. Place the marker between the array declaration and the semicolon:
+The top module must instantiate a `graphics_engine` module with the instance name `gfx_inst`. The graphics engine must contain memory arrays marked with `/*verilator public*/` so the simulator can read from and write to them at runtime. Place the marker between the array declaration and the semicolon:
 
 ```verilog
 reg [2:0] framebuffer [0:76799] /*verilator public*/;
+reg [7:0] nametable [0:1199] /*verilator public*/;
+reg [15:0] pattern_table [0:1023] /*verilator public*/;
+reg [2:0] palette_mem [0:7] /*verilator public*/;
 ```
 
-The framebuffer is 320x240 pixels, where each entry is a 3-bit RGB value (R = bit 2, G = bit 1, B = bit 0).
+The `framebuffer` is used in Image mode (320x240 pixels). The `nametable`, `pattern_table`, and `palette_mem` are used in Tilemap mode for sprite-based rendering.
 
 ### Why These Names Matter
 
@@ -167,13 +173,16 @@ The output executable is placed in `bin/Debug-windows-x86_64/VGAVis/VGAVis.exe` 
 
 ## Usage
 
-Run the built executable. The application opens a window with three panels:
+Run the built executable. The application opens a window with multiple panels:
 
-- **Control Window** -- Browse and load an image file (PNG, JPG, JPEG) into the simulated framebuffer. Adjust the simulation speed (clock cycles per frame) and the RGB quantization threshold.
+- **Control Window** -- Select the render mode (Image or Tilemap). Load an image file into the framebuffer, or load a directory of hex files for the tilemap memories. Adjust simulation speed.
 - **Screen** -- Displays the live 640x480 VGA output as rendered by the simulated controller.
-- **Framebuffer** -- Displays the raw 320x240 framebuffer contents stored in the graphics engine memory.
+- **Framebuffer** -- Displays the raw 320x240 framebuffer contents (used in Image mode).
+- **Nametable & Pattern Table** -- View and edit the raw memory bytes used for tilemap rendering.
+- **Pattern Pixels & Palette** -- Edit individual tiles pixel-by-pixel and adjust the 8-color palette in real-time.
+- **Pattern & Nametable Textures** -- Visual representations of the loaded tile patterns and the composed tilemap screen.
 
-The simulation runs the Verilog design cycle-by-cycle. The `vga_sync` module inside the controller generates the horizontal and vertical timing signals, and the `graphics_engine` reads from the framebuffer to produce the pixel output.
+The simulation runs the Verilog design cycle-by-cycle. The `vga_sync` module generates the timing signals, and the `graphics_engine` uses either the framebuffer or the tilemap memories (based on `mode_select`) to produce the pixel output.
 
 ---
 
