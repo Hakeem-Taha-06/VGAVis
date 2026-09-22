@@ -70,21 +70,23 @@ private:
 	void renderNametableWindow(Simulator& sim);
 	void renderPatternTableWindow(Simulator& sim);
 	void renderPatternPixelsWindow(Simulator& sim);
+	void renderPaletteWindow(Simulator& sim);
 	void renderPatternTextureWindow(Simulator& sim);
-	void renderNametableGridWindow(Simulator& sim);
+	void renderNametableTextureWindow(Simulator& sim);
 
 	struct MemoryViewState {
 		uint16_t search_address = 0;
 		float target_scroll = 0.0f;
 		bool want_search = false;
 	};
-	void renderMemoryTable(const char* title, const char* table_id, uint16_t* data, int count, MemoryViewState& view);
+	void renderMemoryTable(const char* title, const char* table_id, uint8_t* data, int count, MemoryViewState& view);
 	MemoryViewState nametable_view;
 
 	std::string image_path;
 	unsigned int screen_texture = 0;
 	unsigned int framebuffer_texture = 0;
 	unsigned int pattern_texture = 0;
+	unsigned int nametable_texture = 0;
 	int screen_scale = 1;
 	int render_mode = 1; // 0 = Image, 1 = Tilemap
 	int pattern_tile_index = 0;

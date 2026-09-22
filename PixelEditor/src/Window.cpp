@@ -110,6 +110,7 @@ void Window::render(PixelData& data) {
 	renderNametableWindow(data);
 	renderPatternTableWindow(data);
 	renderPatternPixelsWindow(data);
+	renderPaletteWindow(data);
 	renderPatternTextureWindow(data);
 	renderNametableTextureWindow(data);
 
@@ -157,7 +158,7 @@ void Window::renderFileWindow(PixelData& data) {
 	ImGui::End();
 }
 
-void Window::renderMemoryTable(const char* title, const char* table_id, uint16_t* data, int count, MemoryViewState& view) {
+void Window::renderMemoryTable(const char* title, const char* table_id, uint8_t* data, int count, MemoryViewState& view) {
 	ImGui::Begin(title);
 
 	int numCols = 16;
@@ -207,7 +208,7 @@ void Window::renderMemoryTable(const char* title, const char* table_id, uint16_t
 					ImGui::PushID(byteIdx);
 					ImGui::PushItemWidth(-FLT_MIN);
 
-					ImGui::InputScalar("##cell", ImGuiDataType_U16, &data[byteIdx], nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+					ImGui::InputScalar("##cell", ImGuiDataType_U8, &data[byteIdx], nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
 
 					ImGui::PopItemWidth();
 					ImGui::PopID();
@@ -230,7 +231,7 @@ void Window::renderPatternTableWindow(PixelData& data) {
 
 	const int numCols = 8;         // 8 tiles side by side
 	const int rowsPerTile = 8;     // 8 scanlines per tile
-	const int numMajorRows = 1200 / numCols; // 150 groups of 8 tiles
+	const int numMajorRows = 128 / numCols; // 16 groups of 8 tiles
 
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg;
 
@@ -283,7 +284,7 @@ void Window::renderPatternPixelsWindow(PixelData& data) {
 	ImGui::InputInt("Tile Index", &pattern_tile_index);
 	ImGui::PopItemWidth();
 	if (pattern_tile_index < 0) pattern_tile_index = 0;
-	if (pattern_tile_index > 1199) pattern_tile_index = 1199;
+	if (pattern_tile_index > 127) pattern_tile_index = 127;
 
 	ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit;
 	if (ImGui::BeginTable("pixgrid", 8, flags)) {
@@ -294,10 +295,10 @@ void Window::renderPatternPixelsWindow(PixelData& data) {
 			for (int px = 0; px < 8; ++px) {
 				ImGui::TableSetColumnIndex(px);
 
-				int shift = px * 2;
+				int shift = (7 - px) * 2;
 				int val = (word >> shift) & 0x3;
 				ImGui::PushID(py * 8 + px);
-				ImGui::PushItemWidth(30);
+				ImGui::PushItemWidth(80);
 
 				int tmp = val;
 				if (ImGui::InputInt("##px", &tmp, 1, 1)) {
@@ -317,6 +318,40 @@ void Window::renderPatternPixelsWindow(PixelData& data) {
 	ImGui::End();
 }
 
+void Window::renderPaletteWindow(PixelData& data) {
+	ImGui::Begin("Palette");
+	uint8_t* palette = data.getPalette();
+
+	for (int i = 0; i < 8; ++i) {
+		ImGui::PushID(i);
+
+		int val = palette[i];
+		ImGui::PushItemWidth(48.0f);
+		if (ImGui::InputInt("##val", &val, 1, 1)) {
+			if (val < 0) val = 0;
+			if (val > 7) val = 7;
+			palette[i] = (uint8_t)val;
+		}
+		ImGui::PopItemWidth();
+
+		ImGui::SameLine();
+
+		// color swatch
+		float r = (palette[i] & 0b100) ? 1.0f : 0.0f;
+		float g = (palette[i] & 0b010) ? 1.0f : 0.0f;
+		float b = (palette[i] & 0b001) ? 1.0f : 0.0f;
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + 20, pos.y + 20), IM_COL32((int)(r*255), (int)(g*255), (int)(b*255), 255));
+		ImGui::Dummy(ImVec2(20, 20));
+
+		ImGui::SameLine();
+		ImGui::Text("Entry %d", i);
+
+		ImGui::PopID();
+	}
+
+	ImGui::End();
+}
 void Window::renderPatternTextureWindow(PixelData& data) {
 	ImGui::Begin("Pattern Texture");
 
@@ -326,18 +361,18 @@ void Window::renderPatternTextureWindow(PixelData& data) {
 	uint16_t* patterns = data.getPatternTable();
 	const uint8_t* palette = data.getPalette();
 
-	// 1200 tiles in a 40x30 grid, each 8x8 px -> 320x240 texture
-	auto tex = std::make_unique<float[]>(320 * 240 * 3);
+	// 128 tiles in a 16x8 grid, each 8x8 px -> 128x64 texture
+	auto tex = std::make_unique<float[]>(128 * 64 * 3);
 
-	for (int ty = 0; ty < 30; ++ty) {
-		for (int tx = 0; tx < 40; ++tx) {
-			int tile = ty * 40 + tx;
+	for (int ty = 0; ty < 8; ++ty) {
+		for (int tx = 0; tx < 16; ++tx) {
+			int tile = ty * 16 + tx;
 			for (int py = 0; py < 8; ++py) {
 				uint16_t word = patterns[tile * 8 + py];
 				for (int px = 0; px < 8; ++px) {
-					int idx = (word >> (px * 2)) & 0x3;
+					int idx = (word >> ((7 - px) * 2)) & 0x3;
 					uint8_t color = palette[idx];
-					int oi = ((ty * 8 + py) * 320 + (tx * 8 + px)) * 3;
+					int oi = ((ty * 8 + py) * 128 + (tx * 8 + px)) * 3;
 					tex[oi + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red
 					tex[oi + 1] = (color & 0b010) ? 1.0f : 0.0f; // Green
 					tex[oi + 2] = (color & 0b001) ? 1.0f : 0.0f; // Blue
@@ -351,11 +386,11 @@ void Window::renderPatternTextureWindow(PixelData& data) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 320, 240, 0, GL_RGB, GL_FLOAT, tex.get());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 64, 0, GL_RGB, GL_FLOAT, tex.get());
 
 	ImTextureID imTexture = (ImTextureID)(intptr_t)pattern_texture;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imTexture, ImVec2((float)(320 * 2), (float)(240 * 2)));
+	ImGui::Image(imTexture, ImVec2((float)(128 * 2), (float)(64 * 2)));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -369,7 +404,7 @@ void Window::renderNametableTextureWindow(PixelData& data) {
 	if (nametable_texture == 0)
 		glGenTextures(1, &nametable_texture);
 
-	uint16_t* nametable = data.getNametable();
+	uint8_t* nametable = data.getNametable();
 	uint16_t* patterns = data.getPatternTable();
 	const uint8_t* palette = data.getPalette();
 
@@ -378,16 +413,15 @@ void Window::renderNametableTextureWindow(PixelData& data) {
 
 	for (int ty = 0; ty < 30; ++ty) {
 		for (int tx = 0; tx < 40; ++tx) {
-			uint16_t entry = nametable[ty * 40 + tx];
-			int tile = entry & 0x7FF;            // 11-bit tile id
-			int palette_sel = (entry >> 11) & 0x1; // 1-bit palette select
+			uint8_t entry = nametable[ty * 40 + tx];
+			int tile = entry & 0x7F;             // 7-bit tile id
+			int palette_sel = (entry >> 7) & 0x1;  // 1-bit palette select
 			int palette_base = palette_sel * 4;
-			if (tile > 1199) tile = 1199;
 
 			for (int py = 0; py < 8; ++py) {
 				uint16_t word = patterns[tile * 8 + py];
 				for (int px = 0; px < 8; ++px) {
-					int idx = (word >> (px * 2)) & 0x3;
+					int idx = (word >> ((7 - px) * 2)) & 0x3;
 					uint8_t color = palette[palette_base + idx];
 					int oi = ((ty * 8 + py) * 320 + (tx * 8 + px)) * 3;
 					tex[oi + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red

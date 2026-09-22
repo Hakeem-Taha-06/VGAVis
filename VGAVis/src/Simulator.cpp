@@ -4,6 +4,10 @@
 #include <memory>
 #include <algorithm>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iomanip>
 
 #include "Vvga_controller.h"
 #include "Vvga_controller_vga_controller.h"
@@ -24,6 +28,7 @@ Simulator::Simulator() {
 	// Initialize inputs
 	m_top->clk = 0;
 	m_top->rst = 0;
+	m_top->mode_select = 0;
 
 	// Settle the model once so outputs are valid before the first frame
 	m_top->eval();
@@ -31,8 +36,6 @@ Simulator::Simulator() {
 	std::cout << "SUCCESS: Verilated vga_controller linked and evaluated cleanly!" << std::endl;
 	std::cout << "Initial RGB output: 0x" << std::hex << static_cast<int>(m_top->rgb) << std::dec << std::endl;
 
-	// Default palette: identity 3-bit RGB (palette[i] = i)
-	for (int i = 0; i < 8; ++i) palette[i] = (uint8_t)i;
 }
 
 Simulator::~Simulator() {
@@ -59,6 +62,10 @@ void Simulator::Update() {
 	}
 }
 
+void Simulator::setMode(bool spriteMode) {
+	m_top->mode_select = spriteMode ? 1 : 0;
+}
+
 uint8_t Simulator::getRgb() const {
 	return m_top->rgb;
 }
@@ -83,31 +90,23 @@ void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, in
 		}
 	}
 
-	// Floyd-Steinberg error diffusion against palette[0..3] (4 colours, 2 bpp)
+	// Floyd-Steinberg error diffusion to 3-bit direct RGB (8 colours)
 	for (int y = 0; y < h; ++y) {
 		for (int x = 0; x < w; ++x) {
 			int i = (y * w + x) * 3;
 			float r = buf[i + 0], g = buf[i + 1], b = buf[i + 2];
 
-			// Nearest palette colour
-			int best = 0;
-			float bestDist = 1e30f;
-			for (int c = 0; c < 4; ++c) {
-				float pr = (palette[c] & 0b100) ? 1.0f : 0.0f;
-				float pg = (palette[c] & 0b010) ? 1.0f : 0.0f;
-				float pb = (palette[c] & 0b001) ? 1.0f : 0.0f;
-				float dr = r - pr, dg = g - pg, db = b - pb;
-				float d = dr * dr + dg * dg + db * db;
-				if (d < bestDist) { bestDist = d; best = c; }
-			}
+			// Quantize each channel independently to 1 bit (3-bit direct RGB, 8 colours)
+			int r_bit = (r >= 0.5f) ? 1 : 0;
+			int g_bit = (g >= 0.5f) ? 1 : 0;
+			int b_bit = (b >= 0.5f) ? 1 : 0;
 
-			float pr = (palette[best] & 0b100) ? 1.0f : 0.0f;
-			float pg = (palette[best] & 0b010) ? 1.0f : 0.0f;
-			float pb = (palette[best] & 0b001) ? 1.0f : 0.0f;
+			float pr = (float)r_bit, pg = (float)g_bit, pb = (float)b_bit;
 			float er = r - pr, eg = g - pg, eb = b - pb;
 
-			// Store 2-bit colour index into the indexed framebuffer
-			m_top->vga_controller->gfx_inst->framebuffer[y * 320 + x] = (uint8_t)best;
+			// Pack into 3-bit direct RGB (R=bit2, G=bit1, B=bit0)
+			uint8_t color_val = (uint8_t)((r_bit << 2) | (g_bit << 1) | b_bit);
+			m_top->vga_controller->gfx_inst->framebuffer[y * 320 + x] = color_val;
 
 			auto diffuse = [&](int nx, int ny, float wgt) {
 				if (nx < 0 || nx >= w || ny < 0 || ny >= h) return;
@@ -124,6 +123,61 @@ void Simulator::writeImageToFramebuffer(const uint8_t* image_data, int width, in
 	}
 }
 
+static std::string joinPath(const std::string& dir, const char* name) {
+	std::string d = dir;
+	if (!d.empty() && d.back() != '\\' && d.back() != '/') d += '\\';
+	return d + name;
+}
+
+template <typename T>
+static bool readHexFile(const std::string& path, T* data, int count) {
+	std::ifstream in(path);
+	if (!in) return false;
+	for (int i = 0; i < count; ++i) {
+		std::string line;
+		if (!std::getline(in, line)) return false;
+		size_t comment = line.find("//");
+		if (comment != std::string::npos) line = line.substr(0, comment);
+		std::stringstream ss(line);
+		unsigned int v;
+		if (!(ss >> std::hex >> v)) return false;
+		data[i] = (T)v;
+	}
+	return true;
+}
+
+uint8_t* Simulator::getNametable() {
+	return &m_top->vga_controller->gfx_inst->nametable[0];
+}
+
+uint16_t* Simulator::getPatternTable() {
+	return &m_top->vga_controller->gfx_inst->pattern_table[0];
+}
+
+uint8_t* Simulator::getPalette() {
+	return &m_top->vga_controller->gfx_inst->palette_mem[0];
+}
+
+bool Simulator::loadHexFiles(const char* directory) {
+	std::string dir = directory ? directory : "";
+	if (!readHexFile(joinPath(dir, "nametable.hex"), getNametable(), 40 * 30)) return false;
+	if (!readHexFile(joinPath(dir, "pattern_table.hex"), getPatternTable(), 128 * 8)) return false;
+
+	std::ifstream in(joinPath(dir, "palette.hex"));
+	if (!in) return false;
+	uint8_t* pal = getPalette();
+	for (int i = 0; i < 8; ++i) {
+		std::string line;
+		if (!std::getline(in, line)) return false;
+		size_t comment = line.find("//");
+		if (comment != std::string::npos) line = line.substr(0, comment);
+		std::stringstream ss(line);
+		unsigned int v;
+		if (!(ss >> std::hex >> v)) return false;
+		pal[i] = (uint8_t)v;
+	}
+	return true;
+}
 const uint8_t* Simulator::getFramebuffer() const {
 	return &(m_top->vga_controller->gfx_inst->framebuffer[0]);
 }

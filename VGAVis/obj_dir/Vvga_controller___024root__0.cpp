@@ -29,17 +29,23 @@ bool Vvga_controller___024root___eval_ico(Vvga_controller___024root* vlSelf, CDa
     {
         // Inlined CFunc: _eval_triggers_vec__ico
         vlSelfRef.__VicoTriggered[0U] = (QData)((IData)(
-                                                        ((((IData)(vlSelfRef.rst) 
-                                                           != (IData)(vlSelfRef.__Vtrigprevexpr___TOP__rst__0)) 
-                                                          << 1U) 
-                                                         | ((IData)(vlSelfRef.clk) 
-                                                            != (IData)(vlSelfRef.__Vtrigprevexpr___TOP__clk__0)))));
+                                                        ((((IData)(vlSelfRef.mode_select) 
+                                                           != (IData)(vlSelfRef.__Vtrigprevexpr___TOP__mode_select__0)) 
+                                                          << 2U) 
+                                                         | ((((IData)(vlSelfRef.rst) 
+                                                              != (IData)(vlSelfRef.__Vtrigprevexpr___TOP__rst__0)) 
+                                                             << 1U) 
+                                                            | ((IData)(vlSelfRef.clk) 
+                                                               != (IData)(vlSelfRef.__Vtrigprevexpr___TOP__clk__0))))));
         vlSelfRef.__Vtrigprevexpr___TOP__clk__0 = vlSelfRef.clk;
         vlSelfRef.__Vtrigprevexpr___TOP__rst__0 = vlSelfRef.rst;
+        vlSelfRef.__Vtrigprevexpr___TOP__mode_select__0 
+            = vlSelfRef.mode_select;
         if (VL_UNLIKELY(((1U & (~ (IData)(vlSelfRef.__VicoDidInit)))))) {
             vlSelfRef.__VicoDidInit = 1U;
             vlSelfRef.__VicoTriggered[0U] = (1ULL | vlSelfRef.__VicoTriggered[0U]);
             vlSelfRef.__VicoTriggered[0U] = (2ULL | vlSelfRef.__VicoTriggered[0U]);
+            vlSelfRef.__VicoTriggered[0U] = (4ULL | vlSelfRef.__VicoTriggered[0U]);
         }
     }
 #ifdef VL_DEBUG
@@ -53,6 +59,23 @@ bool Vvga_controller___024root___eval_ico(Vvga_controller___024root* vlSelf, CDa
             // Inlined CFunc: _eval_body__ico
             if ((1ULL & vlSelfRef.__VicoTriggered[1U])) {
                 Vvga_controller_graphics_engine___ico_sequent__TOP__vga_controller__gfx_inst__0((&vlSymsp->TOP__vga_controller__gfx_inst));
+                {
+                    // Inlined CFunc: _ico_sequent__TOP__0
+                    vlSelfRef.rgb = (((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__mode_select_d2)
+                                       ? vlSymsp->TOP__vga_controller__gfx_inst.palette_mem
+                                      [(((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__palette_sel_d1) 
+                                         << 2U) | (3U 
+                                                   & ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__pattern_row) 
+                                                      >> 
+                                                      (0x0000000fU 
+                                                       & (((IData)(0x0fU) 
+                                                           - 
+                                                           ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__ntile_x_d2) 
+                                                            << 1U)) 
+                                                          - (IData)(1U))))))]
+                                       : (IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__image_rgb_stage2)) 
+                                     & (- (IData)((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__video_on_d2))));
+                }
             }
         }
     }
@@ -115,15 +138,24 @@ bool Vvga_controller___024root___eval_nba(Vvga_controller___024root* vlSelf) {
                 Vvga_controller_graphics_engine___nba_sequent__TOP__vga_controller__gfx_inst__0((&vlSymsp->TOP__vga_controller__gfx_inst));
                 {
                     // Inlined CFunc: _nba_sequent__TOP__0
-                    vlSelfRef.vsync = (1U & (~ ((0x01eaU 
-                                                 <= (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__v_count)) 
-                                                & (0x01ecU 
-                                                   > (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__v_count)))));
-                    vlSelfRef.hsync = (1U & (~ ((0x0290U 
-                                                 <= (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__h_count)) 
-                                                & (0x02f0U 
-                                                   > (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__h_count)))));
-                    vlSelfRef.rgb = vlSymsp->TOP__vga_controller__gfx_inst.__PVT__rgb;
+                    vlSelfRef.vsync = (1U & ((IData)(vlSymsp->TOP__vga_controller.__PVT__vsync_shift) 
+                                             >> 1U));
+                    vlSelfRef.hsync = (1U & ((IData)(vlSymsp->TOP__vga_controller.__PVT__hsync_shift) 
+                                             >> 1U));
+                    vlSelfRef.rgb = (((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__mode_select_d2)
+                                       ? vlSymsp->TOP__vga_controller__gfx_inst.palette_mem
+                                      [(((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__palette_sel_d1) 
+                                         << 2U) | (3U 
+                                                   & ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__pattern_row) 
+                                                      >> 
+                                                      (0x0000000fU 
+                                                       & (((IData)(0x0fU) 
+                                                           - 
+                                                           ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__ntile_x_d2) 
+                                                            << 1U)) 
+                                                          - (IData)(1U))))))]
+                                       : (IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__image_rgb_stage2)) 
+                                     & (- (IData)((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__video_on_d2))));
                 }
                 Vvga_controller_vga_controller___nba_sequent__TOP__vga_controller__1((&vlSymsp->TOP__vga_controller));
                 Vvga_controller_graphics_engine___ico_sequent__TOP__vga_controller__gfx_inst__0((&vlSymsp->TOP__vga_controller__gfx_inst));
@@ -221,6 +253,9 @@ void Vvga_controller___024root___eval_debug_assertions(Vvga_controller___024root
     }
     if (VL_UNLIKELY(((vlSelfRef.rst & 0xfeU)))) {
         Verilated::overWidthError("rst");
+    }
+    if (VL_UNLIKELY(((vlSelfRef.mode_select & 0xfeU)))) {
+        Verilated::overWidthError("mode_select");
     }
 }
 #endif  // VL_DEBUG

@@ -20,6 +20,9 @@ extern const VlVarTableEntry Vvga_controller_vga_controller__VpiVarTable0[] = {
 };
 extern const VlVarTableEntry Vvga_controller_graphics_engine__VpiVarTable1[] = {
     {"framebuffer", offsetof(Vvga_controller_graphics_engine, framebuffer), VLVT_UINT8, (VLVD_NODIR|VLVF_PUB_RW), 1, 1, {0, 76799, 2, 0, 0, 0}},
+    {"nametable", offsetof(Vvga_controller_graphics_engine, nametable), VLVT_UINT8, (VLVD_NODIR|VLVF_PUB_RW), 1, 1, {0, 1199, 7, 0, 0, 0}},
+    {"palette_mem", offsetof(Vvga_controller_graphics_engine, palette_mem), VLVT_UINT8, (VLVD_NODIR|VLVF_PUB_RW), 1, 1, {0, 7, 2, 0, 0, 0}},
+    {"pattern_table", offsetof(Vvga_controller_graphics_engine, pattern_table), VLVT_UINT16, (VLVD_NODIR|VLVF_PUB_RW), 1, 1, {0, 1023, 15, 0, 0, 0}},
 };
 extern const VlScopeTableEntry Vvga_controller__Syms__VpiScopeTable[] = {
     {offsetof(Vvga_controller__Syms, __Vscopep_vga_controller), "vga_controller", "vga_controller", "<null>", 0, VerilatedScope::SCOPE_OTHER},
@@ -53,7 +56,7 @@ Vvga_controller__Syms::Vvga_controller__Syms(VerilatedContext* contextp, const c
     // Setup export functions - final: 1
     // Setup public variables
     __Vscopep_vga_controller->varsInsertFromTable(Vvga_controller_vga_controller__VpiVarTable0, 3, &(TOP__vga_controller));
-    __Vscopep_vga_controller__gfx_inst->varsInsertFromTable(Vvga_controller_graphics_engine__VpiVarTable1, 1, &(TOP__vga_controller__gfx_inst));
+    __Vscopep_vga_controller__gfx_inst->varsInsertFromTable(Vvga_controller_graphics_engine__VpiVarTable1, 4, &(TOP__vga_controller__gfx_inst));
 }
 
 Vvga_controller__Syms::~Vvga_controller__Syms() {

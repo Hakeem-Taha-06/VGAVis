@@ -19,10 +19,13 @@ class alignas(VL_CACHE_LINE_BYTES) Vvga_controller_vga_controller final {
     // DESIGN-SPECIFIC STATE
     CData/*0:0*/ clk;
     CData/*0:0*/ rst;
+    CData/*0:0*/ mode_select;
     CData/*0:0*/ vsync;
     CData/*0:0*/ hsync;
     CData/*2:0*/ rgb;
     CData/*0:0*/ video_on;
+    CData/*1:0*/ __PVT__vsync_shift;
+    CData/*1:0*/ __PVT__hsync_shift;
     CData/*0:0*/ __PVT__sync_inst__DOT__pixel_clk;
     SData/*9:0*/ pixel_x;
     SData/*9:0*/ pixel_y;

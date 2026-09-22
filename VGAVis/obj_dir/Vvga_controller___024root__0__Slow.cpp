@@ -14,6 +14,8 @@ VL_ATTR_COLD void Vvga_controller___024root___eval_static(Vvga_controller___024r
     Vvga_controller_vga_controller___eval_static__TOP__vga_controller((&vlSymsp->TOP__vga_controller));
     vlSelfRef.__Vtrigprevexpr___TOP__clk__0 = vlSelfRef.clk;
     vlSelfRef.__Vtrigprevexpr___TOP__rst__0 = vlSelfRef.rst;
+    vlSelfRef.__Vtrigprevexpr___TOP__mode_select__0 
+        = vlSelfRef.mode_select;
     vlSelfRef.__Vtrigprevexpr___TOP__clk__1 = vlSelfRef.clk;
 }
 
@@ -56,15 +58,24 @@ VL_ATTR_COLD bool Vvga_controller___024root___eval_stl(Vvga_controller___024root
             if ((1ULL & vlSelfRef.__VstlTriggered[0U])) {
                 {
                     // Inlined CFunc: _stl_sequent__TOP__0
-                    vlSelfRef.rgb = vlSymsp->TOP__vga_controller__gfx_inst.__PVT__rgb;
-                    vlSelfRef.hsync = (1U & (~ ((0x0290U 
-                                                 <= (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__h_count)) 
-                                                & (0x02f0U 
-                                                   > (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__h_count)))));
-                    vlSelfRef.vsync = (1U & (~ ((0x01eaU 
-                                                 <= (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__v_count)) 
-                                                & (0x01ecU 
-                                                   > (IData)(vlSymsp->TOP__vga_controller.__PVT__sync_inst__DOT__v_count)))));
+                    vlSelfRef.hsync = (1U & ((IData)(vlSymsp->TOP__vga_controller.__PVT__hsync_shift) 
+                                             >> 1U));
+                    vlSelfRef.vsync = (1U & ((IData)(vlSymsp->TOP__vga_controller.__PVT__vsync_shift) 
+                                             >> 1U));
+                    vlSelfRef.rgb = (((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__mode_select_d2)
+                                       ? vlSymsp->TOP__vga_controller__gfx_inst.palette_mem
+                                      [(((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__palette_sel_d1) 
+                                         << 2U) | (3U 
+                                                   & ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__pattern_row) 
+                                                      >> 
+                                                      (0x0000000fU 
+                                                       & (((IData)(0x0fU) 
+                                                           - 
+                                                           ((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__ntile_x_d2) 
+                                                            << 1U)) 
+                                                          - (IData)(1U))))))]
+                                       : (IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__image_rgb_stage2)) 
+                                     & (- (IData)((IData)(vlSymsp->TOP__vga_controller__gfx_inst.__PVT__video_on_d2))));
                 }
                 Vvga_controller_vga_controller___nba_sequent__TOP__vga_controller__1((&vlSymsp->TOP__vga_controller));
                 Vvga_controller_graphics_engine___ico_sequent__TOP__vga_controller__gfx_inst__0((&vlSymsp->TOP__vga_controller__gfx_inst));
@@ -183,6 +194,9 @@ VL_ATTR_COLD void Vvga_controller___024root___dump_triggers__ico(const VlUnpacke
     if ((1U & (IData)((triggers[0U] >> 1U)))) {
         VL_DBG_MSGS("         '" + tag + "' region trigger index 1 is active: @( rst)\n");
     }
+    if ((1U & (IData)((triggers[0U] >> 2U)))) {
+        VL_DBG_MSGS("         '" + tag + "' region trigger index 2 is active: @( mode_select)\n");
+    }
     if ((1U & (IData)(triggers[1U]))) {
         VL_DBG_MSGS("         '" + tag + "' region trigger index 64 is active: Internal 'ico' trigger - first iteration\n");
     }
@@ -212,6 +226,7 @@ VL_ATTR_COLD void Vvga_controller___024root___ctor_var_reset(Vvga_controller___0
     const uint64_t __VscopeHash = VL_MURMUR64_HASH(vlSelf->vlNamep);
     vlSelf->clk = VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 16707436170211756652ull);
     vlSelf->rst = VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 18209466448985614591ull);
+    vlSelf->mode_select = VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 13075617197383548380ull);
     vlSelf->vsync = VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 18337175696363507471ull);
     vlSelf->hsync = VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 2999247747110030874ull);
     vlSelf->rgb = VL_SCOPED_RAND_RESET_I(3, __VscopeHash, 11277054808258870952ull);
@@ -223,6 +238,7 @@ VL_ATTR_COLD void Vvga_controller___024root___ctor_var_reset(Vvga_controller___0
     }
     vlSelf->__Vtrigprevexpr___TOP__clk__0 = 0;
     vlSelf->__Vtrigprevexpr___TOP__rst__0 = 0;
+    vlSelf->__Vtrigprevexpr___TOP__mode_select__0 = 0;
     vlSelf->__VicoDidInit = 0;
     for (int __Vi0 = 0; __Vi0 < 1; ++__Vi0) {
         vlSelf->__VactTriggered[__Vi0] = 0;

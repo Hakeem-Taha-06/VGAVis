@@ -62,6 +62,7 @@ private:
 	void renderNametableWindow(PixelData& data);
 	void renderPatternTableWindow(PixelData& data);
 	void renderPatternPixelsWindow(PixelData& data);
+	void renderPaletteWindow(PixelData& data);
 	void renderPatternTextureWindow(PixelData& data);
 	void renderNametableTextureWindow(PixelData& data);
 
@@ -70,7 +71,7 @@ private:
 		float target_scroll = 0.0f;
 		bool want_search = false;
 	};
-	void renderMemoryTable(const char* title, const char* table_id, uint16_t* data, int count, MemoryViewState& view);
+	void renderMemoryTable(const char* title, const char* table_id, uint8_t* data, int count, MemoryViewState& view);
 	MemoryViewState nametable_view;
 
 	unsigned int pattern_texture = 0;

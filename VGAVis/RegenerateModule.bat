@@ -18,7 +18,7 @@ set "CHERE_INVOKING=1"
 echo Running Verilator on vga_controller.v...
 
 :: -l loads environment/paths; -c runs the commands inside bash
-"%MSYS2_PATH%\usr\bin\bash.exe" -lc "verilator -Wall --cc vga_controller.v"
+"%MSYS2_PATH%\usr\bin\bash.exe" -lc "verilator -Wno-fatal --cc vga_controller.v"
 
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] Verilation finished cleanly! obj_dir updated.

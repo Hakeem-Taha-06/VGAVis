@@ -32,7 +32,7 @@ module graphics_engine #(
 
 
     // Image Mode
-    reg [2:0] framebuffer [0:76799];
+    reg [2:0] framebuffer [0:76799] /*verilator public*/;
 
     initial begin
         $readmemh("initial_image.hex", framebuffer);
@@ -65,7 +65,7 @@ module graphics_engine #(
     // nametable address
     wire [10:0] nametable_addr = tile_y * TILES_X + tile_x;
 
-    reg [7:0] nametable [0:NUM_TILES-1];
+    reg [7:0] nametable [0:NUM_TILES-1] /*verilator public*/;
     initial begin
         $readmemh("nametable.hex", nametable);
     end
@@ -86,7 +86,7 @@ module graphics_engine #(
 
     wire [9:0] pattern_addr = {tile_id, ntile_y_d1};
 
-    reg [15:0] pattern_table [0:(NUM_PATTERNS*8)-1];
+    reg [15:0] pattern_table [0:(NUM_PATTERNS*8)-1] /*verilator public*/;
     initial begin
         $readmemh("pattern_table.hex", pattern_table);
     end
@@ -105,7 +105,7 @@ module graphics_engine #(
     wire [1:0] color_index = pattern_row[15 - 2*ntile_x_d2 -: 2];
 
     // palette memory
-    reg [2:0] palette_mem [0:7];
+    reg [2:0] palette_mem [0:7] /*verilator public*/;
     initial begin
         $readmemh("palette.hex", palette_mem);
     end

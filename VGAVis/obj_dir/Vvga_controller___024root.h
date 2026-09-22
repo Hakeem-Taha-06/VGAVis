@@ -19,11 +19,13 @@ class alignas(VL_CACHE_LINE_BYTES) Vvga_controller___024root final {
     // DESIGN-SPECIFIC STATE
     VL_IN8(clk,0,0);
     VL_IN8(rst,0,0);
+    VL_IN8(mode_select,0,0);
     VL_OUT8(vsync,0,0);
     VL_OUT8(hsync,0,0);
     VL_OUT8(rgb,2,0);
     CData/*0:0*/ __Vtrigprevexpr___TOP__clk__0;
     CData/*0:0*/ __Vtrigprevexpr___TOP__rst__0;
+    CData/*0:0*/ __Vtrigprevexpr___TOP__mode_select__0;
     CData/*0:0*/ __VicoDidInit;
     CData/*0:0*/ __Vtrigprevexpr___TOP__clk__1;
     VlUnpacked<QData/*63:0*/, 1> __VstlTriggered;

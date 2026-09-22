@@ -12,6 +12,7 @@ Vvga_controller::Vvga_controller(VerilatedContext* _vcontextp__, const char* _vc
     , m_evalLoop{*this, /*convergeLimit:*/ 10000}
     , clk{vlSymsp->TOP.clk}
     , rst{vlSymsp->TOP.rst}
+    , mode_select{vlSymsp->TOP.mode_select}
     , vsync{vlSymsp->TOP.vsync}
     , hsync{vlSymsp->TOP.hsync}
     , rgb{vlSymsp->TOP.rgb}

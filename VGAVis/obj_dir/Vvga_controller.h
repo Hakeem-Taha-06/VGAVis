@@ -36,6 +36,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vvga_controller VL_NOT_FINAL : public Verilat
     // propagate new values into/out from the Verilated model.
     VL_IN8(&clk,0,0);
     VL_IN8(&rst,0,0);
+    VL_IN8(&mode_select,0,0);
     VL_OUT8(&vsync,0,0);
     VL_OUT8(&hsync,0,0);
     VL_OUT8(&rgb,2,0);

@@ -16,16 +16,18 @@ static std::string joinPath(const std::string& dir, const char* name) {
 	return d + name;
 }
 
-static bool writeHexFile(const std::string& path, const uint16_t* data, int count, int digits) {
+template <typename T>
+static bool writeHexFile(const std::string& path, const T* data, int count, int digits) {
 	std::ofstream out(path);
 	if (!out) return false;
 	for (int i = 0; i < count; ++i) {
-		out << std::uppercase << std::hex << std::setw(digits) << std::setfill('0') << data[i] << '\n';
+		out << std::uppercase << std::hex << std::setw(digits) << std::setfill('0') << static_cast<unsigned>(data[i]) << '\n';
 	}
 	return out.good();
 }
 
-static bool readHexFile(const std::string& path, uint16_t* data, int count) {
+template <typename T>
+static bool readHexFile(const std::string& path, T* data, int count) {
 	std::ifstream in(path);
 	if (!in) return false;
 	for (int i = 0; i < count; ++i) {
@@ -36,15 +38,15 @@ static bool readHexFile(const std::string& path, uint16_t* data, int count) {
 		std::stringstream ss(line);
 		unsigned int v;
 		if (!(ss >> std::hex >> v)) return false;
-		data[i] = (uint16_t)v;
+		data[i] = (T)v;
 	}
 	return true;
 }
 
 bool PixelData::exportHex(const char* directory) {
 	std::string dir = directory ? directory : "";
-	if (!writeHexFile(joinPath(dir, "nametable.hex"), nametable, 40 * 30, 3)) return false;
-	if (!writeHexFile(joinPath(dir, "pattern.hex"), patternTable, 1200 * 8, 4)) return false;
+	if (!writeHexFile(joinPath(dir, "nametable.hex"), nametable, 40 * 30, 2)) return false;
+	if (!writeHexFile(joinPath(dir, "pattern_table.hex"), patternTable, 128 * 8, 4)) return false;
 
 	std::ofstream out(joinPath(dir, "palette.hex"));
 	if (!out) return false;
@@ -57,7 +59,7 @@ bool PixelData::exportHex(const char* directory) {
 bool PixelData::importHex(const char* directory) {
 	std::string dir = directory ? directory : "";
 	if (!readHexFile(joinPath(dir, "nametable.hex"), nametable, 40 * 30)) return false;
-	if (!readHexFile(joinPath(dir, "pattern.hex"), patternTable, 1200 * 8)) return false;
+	if (!readHexFile(joinPath(dir, "pattern_table.hex"), patternTable, 128 * 8)) return false;
 
 	std::ifstream in(joinPath(dir, "palette.hex"));
 	if (!in) return false;

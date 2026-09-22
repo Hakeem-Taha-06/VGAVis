@@ -21,6 +21,18 @@ void Vvga_controller_vga_controller___nba_sequent__TOP__vga_controller__0(Vvga_c
     __Vdly__sync_inst__DOT__v_count = vlSelfRef.__PVT__sync_inst__DOT__v_count;
     __Vdly__sync_inst__DOT__pixel_clk = (1U & ((~ (IData)(vlSymsp->TOP.rst)) 
                                                & (~ (IData)(vlSelfRef.__PVT__sync_inst__DOT__pixel_clk))));
+    vlSelfRef.__PVT__vsync_shift = ((2U & ((IData)(vlSelfRef.__PVT__vsync_shift) 
+                                           << 1U)) 
+                                    | (1U & (~ ((0x01eaU 
+                                                 <= (IData)(vlSelfRef.__PVT__sync_inst__DOT__v_count)) 
+                                                & (0x01ecU 
+                                                   > (IData)(vlSelfRef.__PVT__sync_inst__DOT__v_count))))));
+    vlSelfRef.__PVT__hsync_shift = ((2U & ((IData)(vlSelfRef.__PVT__hsync_shift) 
+                                           << 1U)) 
+                                    | (1U & (~ ((0x0290U 
+                                                 <= (IData)(vlSelfRef.__PVT__sync_inst__DOT__h_count)) 
+                                                & (0x02f0U 
+                                                   > (IData)(vlSelfRef.__PVT__sync_inst__DOT__h_count))))));
     if (vlSymsp->TOP.rst) {
         __Vdly__sync_inst__DOT__h_count = 0U;
         __Vdly__sync_inst__DOT__v_count = 0U;

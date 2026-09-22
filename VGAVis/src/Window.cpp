@@ -118,8 +118,9 @@ void Window::render(Simulator& sim) {
 	renderNametableWindow(sim);
 	renderPatternTableWindow(sim);
 	renderPatternPixelsWindow(sim);
+	renderPaletteWindow(sim);
 	renderPatternTextureWindow(sim);
-	renderNametableGridWindow(sim);
+	renderNametableTextureWindow(sim);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -193,10 +194,21 @@ void Window::renderControlWindow(Simulator& sim) {
 		}
 	}
 
+	if (ImGui::Button("Load Hex")) {
+		const char* dir = tinyfd_selectFolderDialog("Select hex directory", "");
+		if (dir) {
+			if (sim.loadHexFiles(dir))
+				printf("Loaded nametable.hex, pattern.hex, palette.hex\n");
+			else
+				printf("Hex load failed\n");
+		}
+	}
+
 	ImGui::InputInt("Simulation Speed", &sim_speed);
 
 	const char* modes[] = { "Image", "Tilemap" };
 	ImGui::Combo("Render Mode", &render_mode, modes, 2);
+	sim.setMode(render_mode == 1);
 
 	ImGui::End();
 }
@@ -263,7 +275,7 @@ void Window::renderFramebufferWindow(Simulator& sim) {
 	ImGui::End();
 }
 
-void Window::renderMemoryTable(const char* title, const char* table_id, uint16_t* data, int count, MemoryViewState& view) {
+void Window::renderMemoryTable(const char* title, const char* table_id, uint8_t* data, int count, MemoryViewState& view) {
 	ImGui::Begin(title);
 
 	int numCols = 16;
@@ -313,7 +325,7 @@ void Window::renderMemoryTable(const char* title, const char* table_id, uint16_t
 					ImGui::PushID(byteIdx);
 					ImGui::PushItemWidth(-FLT_MIN);
 
-					ImGui::InputScalar("##cell", ImGuiDataType_U16, &data[byteIdx], nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+					ImGui::InputScalar("##cell", ImGuiDataType_U8, &data[byteIdx], nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
 
 					ImGui::PopItemWidth();
 					ImGui::PopID();
@@ -336,7 +348,7 @@ void Window::renderPatternTableWindow(Simulator& sim) {
 
 	const int numCols = 8;         // 8 tiles side by side
 	const int rowsPerTile = 8;     // 8 scanlines per tile
-	const int numMajorRows = 1200 / numCols; // 150 groups of 8 tiles
+	const int numMajorRows = 128 / numCols; // 16 groups of 8 tiles
 
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg;
 
@@ -389,7 +401,7 @@ void Window::renderPatternPixelsWindow(Simulator& sim) {
 	ImGui::InputInt("Tile Index", &pattern_tile_index);
 	ImGui::PopItemWidth();
 	if (pattern_tile_index < 0) pattern_tile_index = 0;
-	if (pattern_tile_index > 1199) pattern_tile_index = 1199;
+	if (pattern_tile_index > 127) pattern_tile_index = 127;
 
 	ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit;
 	if (ImGui::BeginTable("pixgrid", 8, flags)) {
@@ -400,10 +412,10 @@ void Window::renderPatternPixelsWindow(Simulator& sim) {
 			for (int px = 0; px < 8; ++px) {
 				ImGui::TableSetColumnIndex(px);
 
-				int shift = px * 2;
+				int shift = (7 - px) * 2;
 				int val = (word >> shift) & 0x3;
 				ImGui::PushID(py * 8 + px);
-				ImGui::PushItemWidth(30);
+				ImGui::PushItemWidth(80);
 
 				int tmp = val;
 				if (ImGui::InputInt("##px", &tmp, 1, 1)) {
@@ -418,6 +430,40 @@ void Window::renderPatternPixelsWindow(Simulator& sim) {
 			}
 		}
 		ImGui::EndTable();
+	}
+
+	ImGui::End();
+}
+
+void Window::renderPaletteWindow(Simulator& sim) {
+	ImGui::Begin("Palette");
+	uint8_t* palette = sim.getPalette();
+
+	for (int i = 0; i < 8; ++i) {
+		ImGui::PushID(i);
+
+		int val = palette[i];
+		ImGui::PushItemWidth(48.0f);
+		if (ImGui::InputInt("##val", &val, 1, 1)) {
+			if (val < 0) val = 0;
+			if (val > 7) val = 7;
+			palette[i] = (uint8_t)val;
+		}
+		ImGui::PopItemWidth();
+
+		ImGui::SameLine();
+
+		float r = (palette[i] & 0b100) ? 1.0f : 0.0f;
+		float g = (palette[i] & 0b010) ? 1.0f : 0.0f;
+		float b = (palette[i] & 0b001) ? 1.0f : 0.0f;
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + 20, pos.y + 20), IM_COL32((int)(r*255), (int)(g*255), (int)(b*255), 255));
+		ImGui::Dummy(ImVec2(20, 20));
+
+		ImGui::SameLine();
+		ImGui::Text("Entry %d", i);
+
+		ImGui::PopID();
 	}
 
 	ImGui::End();
@@ -438,18 +484,18 @@ void Window::renderPatternTextureWindow(Simulator& sim) {
 	uint16_t* patterns = sim.getPatternTable();
 	const uint8_t* palette = sim.getPalette();
 
-	// 1200 tiles in a 40x30 grid, each 8x8 px -> 320x240 texture
-	auto tex = std::make_unique<float[]>(320 * 240 * 3);
+	// 128 tiles in a 16x8 grid, each 8x8 px -> 128x64 texture
+	auto tex = std::make_unique<float[]>(128 * 64 * 3);
 
-	for (int ty = 0; ty < 30; ++ty) {
-		for (int tx = 0; tx < 40; ++tx) {
-			int tile = ty * 40 + tx;
+	for (int ty = 0; ty < 8; ++ty) {
+		for (int tx = 0; tx < 16; ++tx) {
+			int tile = ty * 16 + tx;
 			for (int py = 0; py < 8; ++py) {
 				uint16_t word = patterns[tile * 8 + py];
 				for (int px = 0; px < 8; ++px) {
-					int idx = (word >> (px * 2)) & 0x3;
+					int idx = (word >> ((7 - px) * 2)) & 0x3;
 					uint8_t color = palette[idx];
-					int oi = ((ty * 8 + py) * 320 + (tx * 8 + px)) * 3;
+					int oi = ((ty * 8 + py) * 128 + (tx * 8 + px)) * 3;
 					tex[oi + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red
 					tex[oi + 1] = (color & 0b010) ? 1.0f : 0.0f; // Green
 					tex[oi + 2] = (color & 0b001) ? 1.0f : 0.0f; // Blue
@@ -463,11 +509,11 @@ void Window::renderPatternTextureWindow(Simulator& sim) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 320, 240, 0, GL_RGB, GL_FLOAT, tex.get());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 64, 0, GL_RGB, GL_FLOAT, tex.get());
 
 	ImTextureID imTexture = (ImTextureID)(intptr_t)pattern_texture;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imTexture, ImVec2((float)(320 * screen_scale), (float)(240 * screen_scale)));
+	ImGui::Image(imTexture, ImVec2((float)(128 * 3), (float)(64 * 3)));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -475,20 +521,53 @@ void Window::renderPatternTextureWindow(Simulator& sim) {
 	ImGui::End();
 }
 
-void Window::renderNametableGridWindow(Simulator& sim) {
-	ImGui::Begin("Nametable Grid");
-	uint16_t* nt = sim.getNametable();
+void Window::renderNametableTextureWindow(Simulator& sim) {
+	ImGui::Begin("Nametable Texture");
 
-	if (ImGui::BeginTable("ntgrid", 40, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
-		for (int y = 0; y < 30; ++y) {
-			ImGui::TableNextRow();
-			for (int x = 0; x < 40; ++x) {
-				ImGui::TableSetColumnIndex(x);
-				ImGui::Text("%03X", nt[y * 40 + x]);
+	if (nametable_texture == 0)
+		glGenTextures(1, &nametable_texture);
+
+	uint8_t* nametable = sim.getNametable();
+	uint16_t* patterns = sim.getPatternTable();
+	const uint8_t* palette = sim.getPalette();
+
+	// 40x30 nametable entries, each resolving to an 8x8 tile -> 320x240 texture
+	auto tex = std::make_unique<float[]>(320 * 240 * 3);
+
+	for (int ty = 0; ty < 30; ++ty) {
+		for (int tx = 0; tx < 40; ++tx) {
+			uint8_t entry = nametable[ty * 40 + tx];
+			int tile = entry & 0x7F;             // 7-bit tile id
+			int palette_sel = (entry >> 7) & 0x1;  // 1-bit palette select
+			int palette_base = palette_sel * 4;
+
+			for (int py = 0; py < 8; ++py) {
+				uint16_t word = patterns[tile * 8 + py];
+				for (int px = 0; px < 8; ++px) {
+					int idx = (word >> ((7 - px) * 2)) & 0x3;
+					uint8_t color = palette[palette_base + idx];
+					int oi = ((ty * 8 + py) * 320 + (tx * 8 + px)) * 3;
+					tex[oi + 0] = (color & 0b100) ? 1.0f : 0.0f; // Red
+					tex[oi + 1] = (color & 0b010) ? 1.0f : 0.0f; // Green
+					tex[oi + 2] = (color & 0b001) ? 1.0f : 0.0f; // Blue
+				}
 			}
 		}
-		ImGui::EndTable();
 	}
+
+	glBindTexture(GL_TEXTURE_2D, nametable_texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 320, 240, 0, GL_RGB, GL_FLOAT, tex.get());
+
+	ImTextureID imTexture = (ImTextureID)(intptr_t)nametable_texture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imTexture, ImVec2((float)(320 * 2), (float)(240 * 2)));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	ImGui::End();
 }
